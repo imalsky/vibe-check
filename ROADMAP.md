@@ -15,7 +15,7 @@ tested, and its behavior is documented.
 - [x] `leakage.split_overlap`
 - [x] `distribution.coverage`
 - [x] `distribution.drift`
-- [ ] `export.roundtrip`
+- [x] `export.roundtrip`
 
 ## M3 (Aug-Sep) - Error, calibration, constraint, speed
 - [x] `error.pointwise`
