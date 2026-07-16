@@ -18,7 +18,11 @@ classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Topic :: Scientific/Engineering",
 ]
 dependencies = [
@@ -32,9 +36,22 @@ dev = ["pytest>=7.4", "ruff>=0.5", "pytest-cov>=4.1"]
 [project.urls]
 Homepage = "https://github.com/imalsky/vibe-check"
 Repository = "https://github.com/imalsky/vibe-check"
+Issues = "https://github.com/imalsky/vibe-check/issues"
+Changelog = "https://github.com/imalsky/vibe-check/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/vibecheck"]
+
+# The sdist ships the package, tests, docs guides, and example scripts, but not
+# internal working files or large generated report pages.
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "/.github",
+  "/CLAUDE.md",
+  "/GOAL.md",
+  "/docs/proposal",
+  "/examples/*/report.html",
+]
 
 [tool.ruff]
 line-length = 100
