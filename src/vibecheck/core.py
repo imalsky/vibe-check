@@ -79,6 +79,112 @@ class Report:
                 fh.write(text)
         return text
 
+    def to_html(self, path: str | None = None) -> str:
+        """Render the report as a single self-contained HTML document.
+
+        Figures are embedded as base64 PNG so the file has no external
+        dependencies. Any figure object exposing ``savefig(buffer, format=...)``
+        (such as a matplotlib ``Figure``) is supported; matplotlib itself is
+        never imported here, so the core stays numpy-only. A figure that cannot
+        be rendered is skipped with a visible note rather than raising, and all
+        text is HTML-escaped.
+        """
+        import html
+
+        overall = self.summary().value
+        overall_color = _STATUS_COLORS.get(overall, "#000000")
+        parts = [
+            "<!doctype html>",
+            '<html lang="en">',
+            "<head>",
+            '<meta charset="utf-8">',
+            '<meta name="viewport" content="width=device-width, initial-scale=1">',
+            "<title>vibe-check report</title>",
+            "<style>",
+            "body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;"
+            "max-width:900px;margin:2rem auto;padding:0 1rem;line-height:1.5;}",
+            ".status{font-weight:600;text-transform:uppercase;}",
+            ".check{border:1px solid #d0d7de;border-radius:6px;"
+            "padding:0.5rem 1rem;margin:1rem 0;}",
+            ".metrics{font-family:ui-monospace,monospace;font-size:0.9em;}",
+            "img{max-width:100%;height:auto;}",
+            "</style>",
+            "</head>",
+            "<body>",
+            "<h1>vibe-check report</h1>",
+            f'<p>Overall: <span class="status" style="color:{overall_color}">'
+            f"{html.escape(overall.upper())}</span></p>",
+        ]
+
+        if not self.results:
+            parts.append("<p>No checks were run.</p>")
+
+        for r in self.results:
+            color = _STATUS_COLORS.get(r.status.value, "#000000")
+            parts.append('<section class="check">')
+            parts.append(
+                f'<h2>{html.escape(r.name)} '
+                f'<span class="status" style="color:{color}">'
+                f"{html.escape(r.status.value.upper())}</span></h2>"
+            )
+            parts.append(f"<p>{html.escape(r.summary)}</p>")
+            if r.metrics:
+                parts.append('<ul class="metrics">')
+                for k, v in r.metrics.items():
+                    parts.append(f"<li>{html.escape(str(k))}: {html.escape(str(v))}</li>")
+                parts.append("</ul>")
+            if r.details:
+                parts.append(f"<p>{html.escape(r.details)}</p>")
+            for fig in r.figures:
+                encoded = _encode_figure(fig)
+                if encoded is None:
+                    parts.append("<p><em>(figure could not be rendered)</em></p>")
+                else:
+                    parts.append(
+                        f'<img alt="figure for {html.escape(r.name)}" '
+                        f'src="data:image/png;base64,{encoded}">'
+                    )
+            parts.append("</section>")
+
+        parts.append("</body>")
+        parts.append("</html>")
+        text = "\n".join(parts)
+        if path is not None:
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(text)
+        return text
+
+
+# Status value -> CSS color, shared by the HTML renderer.
+_STATUS_COLORS = {
+    "pass": "#1a7f37",
+    "warn": "#9a6700",
+    "fail": "#cf222e",
+    "skip": "#6e7781",
+    "error": "#cf222e",
+}
+
+
+def _encode_figure(fig: Any) -> str | None:
+    """Encode a figure as a base64 PNG string, or return None if it cannot be.
+
+    Duck-typed on ``savefig`` so matplotlib is not imported by the core. Any
+    rendering failure is swallowed and reported as None so one bad figure never
+    sinks a report.
+    """
+    savefig = getattr(fig, "savefig", None)
+    if savefig is None:
+        return None
+    import base64
+    import io
+
+    try:
+        buffer = io.BytesIO()
+        savefig(buffer, format="png", bbox_inches="tight")
+        return base64.b64encode(buffer.getvalue()).decode("ascii")
+    except Exception:
+        return None
+
 
 # The registry of checks the orchestrator will run. Each implemented check
 # appends itself here as it lands. Kept empty until the first check is wired in

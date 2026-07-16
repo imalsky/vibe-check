@@ -8,7 +8,7 @@ tested, and its behavior is documented.
 - [x] Package skeleton, CI, license, README
 - [x] Draft validation contract (`docs/VALIDATION_CONTRACT.md`)
 - [ ] Finalize `CheckResult` / `Report` API after first two checks land
-- [ ] `report.to_html` with embedded figures
+- [x] `report.to_html` with embedded figures
 
 ## M2 (Jul-Aug) - Split, normalization, distribution, export
 - [ ] `leakage.normalization`
