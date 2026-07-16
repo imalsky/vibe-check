@@ -20,7 +20,7 @@ tested, and its behavior is documented.
 ## M3 (Aug-Sep) - Error, calibration, constraint, speed
 - [x] `error.pointwise`
 - [x] `error.field`
-- [ ] `calibration.coverage`
+- [x] `calibration.coverage`
 - [ ] `constraints.physical`
 - [ ] `speed.inference`
 
