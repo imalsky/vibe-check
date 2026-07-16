@@ -251,6 +251,7 @@ def _register_default_checks() -> None:
             leakage.normalization,
             leakage.split_overlap,
             distribution.coverage,
+            distribution.drift,
         ]
     )
 

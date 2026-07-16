@@ -12,7 +12,7 @@ from typing import Any
 
 import numpy as np
 
-from .._utils import as_2d, get_array, skip, want_figures
+from .._utils import as_2d, get_array, ks_distance, skip, want_figures
 from ..core import CheckResult, Status
 
 
@@ -100,8 +100,103 @@ coverage.check_name = "distribution.coverage"
 
 
 def drift(**context: Any) -> CheckResult:
-    """Compare train/val/test marginals (histograms, Q-Q, KS distance)."""
-    raise NotImplementedError
+    """Compare train/val/test marginals with the Kolmogorov-Smirnov distance.
+
+    For each input feature the check computes the two-sample KS distance
+    between the training marginal and each held-out marginal (validation and
+    test). The KS distance is in ``[0, 1]``; larger means the distributions
+    differ more. The verdict is on the worst feature across comparisons: above
+    ``fail_ks`` (default 0.2) -> FAIL, above ``warn_ks`` (default 0.1) -> WARN,
+    otherwise PASS. Thresholds live under ``metadata['drift']``.
+
+    A drifted marginal does not by itself mean the surrogate is wrong, but it
+    tells you the held-out data is not sampled like the training data, which is
+    often why coverage and error checks then fail. Needs ``X_train`` and at
+    least one of ``X_val`` / ``X_test``; SKIPs otherwise. Set
+    ``metadata['make_figures'] = True`` for a per-feature KS bar chart.
+    """
+    name = "distribution.drift"
+    metadata = context.get("metadata") or {}
+    cfg = metadata.get("drift") or {}
+    warn_ks = float(cfg.get("warn_ks", 0.1))
+    fail_ks = float(cfg.get("fail_ks", 0.2))
+
+    x_train = get_array(context, "X_train")
+    if x_train is None:
+        return skip(name, "no X_train")
+    x_train = as_2d(x_train)
+    n_feat = x_train.shape[1]
+
+    others = {
+        key: as_2d(get_array(context, key))
+        for key in ("X_val", "X_test")
+        if context.get(key) is not None
+    }
+    comparisons = {
+        label: np.array([ks_distance(x_train[:, j], x[:, j]) for j in range(n_feat)])
+        for label, x in others.items()
+        if x.shape[1] == n_feat
+    }
+    if not comparisons:
+        return skip(name, "need X_val or X_test with matching feature dimensions")
+
+    worst = 0.0
+    worst_label = ""
+    worst_feature = -1
+    for label, ks in comparisons.items():
+        j = int(np.nanargmax(ks))
+        if ks[j] > worst:
+            worst, worst_label, worst_feature = float(ks[j]), label, j
+
+    all_ks = np.concatenate(list(comparisons.values()))
+    metrics = {
+        "max_ks_distance": worst,
+        "worst_feature_index": float(worst_feature),
+        "mean_ks_distance": float(np.nanmean(all_ks)),
+        "warn_ks": warn_ks,
+        "fail_ks": fail_ks,
+    }
+    details = "\n".join(
+        f"- train vs {label}: max KS {np.nanmax(ks):.3f} at feature {int(np.nanargmax(ks))}"
+        for label, ks in comparisons.items()
+    )
+
+    figures = []
+    plt = want_figures(context)
+    if plt is not None:
+        label = "X_test" if "X_test" in comparisons else next(iter(comparisons))
+        ks = comparisons[label]
+        fig, ax = plt.subplots(figsize=(6, 3))
+        ax.bar(np.arange(n_feat), ks, color="#1a6acf")
+        ax.axhline(warn_ks, ls="--", lw=1, color="#9a6700")
+        ax.axhline(fail_ks, ls="--", lw=1, color="#cf222e")
+        ax.set_xlabel("input feature")
+        ax.set_ylabel("KS distance")
+        ax.set_title(f"distribution.drift: train vs {label}")
+        fig.tight_layout()
+        figures.append(fig)
+
+    if worst > fail_ks:
+        status = Status.FAIL
+        summary = (
+            f"strong marginal drift (max KS {worst:.2f}) between train and "
+            f"{worst_label} at feature {worst_feature}"
+        )
+    elif worst > warn_ks:
+        status = Status.WARN
+        summary = f"moderate marginal drift (max KS {worst:.2f}) vs {worst_label}"
+    else:
+        status = Status.PASS
+        summary = f"train and held-out marginals are close (max KS {worst:.2f})"
+
+    return CheckResult(
+        name=name,
+        status=status,
+        summary=summary,
+        metrics=metrics,
+        details=details,
+        figures=figures,
+    )
 
 
 drift.check_name = "distribution.drift"

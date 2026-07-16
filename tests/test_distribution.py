@@ -49,3 +49,35 @@ def test_coverage_attaches_figure_when_requested():
         X_train=x_train, X_test=x_test, metadata={"make_figures": True}
     )
     assert len(result.figures) == 1
+
+
+def test_drift_fail_on_shifted_test_marginal():
+    rng = np.random.default_rng(10)
+    x_train = rng.normal(0.0, 1.0, size=(2000, 3))
+    x_test = rng.normal(5.0, 1.0, size=(2000, 3))  # far-shifted marginals
+    result = distribution.drift(X_train=x_train, X_test=x_test)
+    assert result.status is vc.Status.FAIL
+    assert result.metrics["max_ks_distance"] > 0.2
+
+
+def test_drift_pass_on_matched_marginals():
+    rng = np.random.default_rng(11)
+    x_train = rng.normal(0.0, 1.0, size=(4000, 3))
+    x_test = rng.normal(0.0, 1.0, size=(4000, 3))  # same distribution
+    result = distribution.drift(X_train=x_train, X_test=x_test)
+    assert result.status is vc.Status.PASS
+    assert result.metrics["max_ks_distance"] < 0.1
+
+
+def test_drift_warn_on_moderate_shift():
+    rng = np.random.default_rng(12)
+    x_train = rng.normal(0.0, 1.0, size=(4000, 2))
+    x_test = rng.normal(0.3, 1.0, size=(4000, 2))  # ~0.12 KS, between thresholds
+    result = distribution.drift(X_train=x_train, X_test=x_test)
+    assert result.status is vc.Status.WARN
+
+
+def test_drift_skips_without_heldout():
+    rng = np.random.default_rng(13)
+    result = distribution.drift(X_train=rng.normal(size=(100, 3)))
+    assert result.status is vc.Status.SKIP
