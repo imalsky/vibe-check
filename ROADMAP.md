@@ -30,7 +30,7 @@ tested, and its behavior is documented.
 - [x] FNO (Burgers) example + report template
 - [x] Tutorial / end-to-end workflow doc
 - [ ] Tagged release; archive examples
-- [ ] URSSI case study on normalization leakage
+- [x] URSSI case study on normalization leakage
 
 ## Ongoing (community)
 - [ ] Monthly progress note
