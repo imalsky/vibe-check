@@ -1,0 +1,42 @@
+# --- Financial / personal: do not push (kept locally only) ---
+code-for-science-and-society-invoice/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.pixi/
+
+# --- Testing / coverage / caches ---
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- Data, trained models, generated reports (keep the repo light) ---
+data/
+models/
+*.pt
+*.pth
+*.onnx
+*.h5
+*.npz
+outputs/
+reports/*.html
+*.log
+
+# --- OS / editor ---
+.DS_Store
+.idea/
+.vscode/
