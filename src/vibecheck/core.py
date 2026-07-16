@@ -249,6 +249,7 @@ def _register_default_checks() -> None:
     _REGISTERED_CHECKS.extend(
         [
             leakage.normalization,
+            leakage.split_overlap,
         ]
     )
 

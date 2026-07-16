@@ -50,3 +50,40 @@ def test_normalization_skips_without_heldout_split():
     norm = {"mean": x_train.mean(axis=0), "std": x_train.std(axis=0)}
     result = leakage.normalization(X_train=x_train, metadata={"normalization": norm})
     assert result.status is vc.Status.SKIP
+
+
+def test_split_overlap_fail_on_exact_duplicates():
+    rng = np.random.default_rng(1)
+    x_train = rng.normal(size=(120, 4))
+    x_test = rng.normal(size=(60, 4))
+    x_test[:5] = x_train[:5]  # five rows leaked verbatim into the test split
+    result = leakage.split_overlap(X_train=x_train, X_test=x_test)
+    assert result.status is vc.Status.FAIL
+    assert result.metrics["exact_duplicate_rows"] >= 5
+
+
+def test_split_overlap_pass_on_disjoint_splits():
+    rng = np.random.default_rng(2)
+    x_train = rng.normal(size=(120, 4))
+    x_test = rng.normal(size=(60, 4)) + 100.0  # far apart, no overlap
+    result = leakage.split_overlap(X_train=x_train, X_test=x_test)
+    assert result.status is vc.Status.PASS
+    assert result.metrics["exact_duplicate_rows"] == 0
+    assert result.metrics["near_duplicate_rows"] == 0
+
+
+def test_split_overlap_warn_on_near_duplicates():
+    rng = np.random.default_rng(3)
+    x_train = rng.normal(size=(120, 4))
+    x_test = rng.normal(size=(60, 4)) + 100.0
+    x_test[:5] = x_train[:5] + 1e-5  # near-duplicates, not exact
+    result = leakage.split_overlap(X_train=x_train, X_test=x_test)
+    assert result.status is vc.Status.WARN
+    assert result.metrics["near_duplicate_rows"] >= 5
+    assert result.metrics["exact_duplicate_rows"] == 0
+
+
+def test_split_overlap_skips_with_one_split():
+    rng = np.random.default_rng(4)
+    result = leakage.split_overlap(X_train=rng.normal(size=(30, 4)))
+    assert result.status is vc.Status.SKIP
