@@ -22,7 +22,7 @@ tested, and its behavior is documented.
 - [x] `error.field`
 - [x] `calibration.coverage`
 - [x] `constraints.physical`
-- [ ] `speed.inference`
+- [x] `speed.inference`
 
 ## M4 (Sep-Nov) - Validate, document, release
 - [ ] Robertson example + report template

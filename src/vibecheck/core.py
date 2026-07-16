@@ -251,6 +251,7 @@ def _register_default_checks() -> None:
         error,
         export,
         leakage,
+        speed,
     )
 
     _REGISTERED_CHECKS.extend(
@@ -264,6 +265,7 @@ def _register_default_checks() -> None:
             calibration.coverage,
             constraints.physical,
             export.roundtrip,
+            speed.inference,
         ]
     )
 
