@@ -84,6 +84,9 @@ def main():
         return model.predict(scaled) * y_sd + y_mu
 
     def exported_predict(x_raw):
+        # Simulate an export round-trip by rounding the standardized inputs
+        # through float32 (as an ONNX pipeline would); the model itself still
+        # runs in float64, so the diff is small but non-zero.
         scaled = ((np.asarray(x_raw, dtype=np.float32) - x_mu.astype(np.float32))
                   / x_sd.astype(np.float32))
         return model.predict(scaled.astype(float)) * y_sd + y_mu
@@ -111,8 +114,9 @@ def main():
         X_test=x_test, y_test=y_test,
         metadata=metadata,
     )
-    report.to_markdown(str(HERE / "report.md"))
-    report.to_html(str(HERE / "report.html"))
+    title = "vibe-check report: Lorenz trajectory MLP"
+    report.to_markdown(str(HERE / "report.md"), title=title)
+    report.to_html(str(HERE / "report.html"), title=title)
     print(f"Lorenz: overall {report.summary().value.upper()} "
           f"over {len(report.results)} checks. Wrote report.md and report.html.")
 

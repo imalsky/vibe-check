@@ -103,7 +103,7 @@ class FNO1d(nn.Module):
 
     def forward(self, x):
         x = self.fc0(x).permute(0, 2, 1)
-        for spectral, pointwise in zip(self.spectral, self.pointwise, strict=False):
+        for spectral, pointwise in zip(self.spectral, self.pointwise, strict=True):
             x = F.gelu(spectral(x) + pointwise(x))
         x = x.permute(0, 2, 1)
         x = F.gelu(self.fc1(x))
@@ -187,8 +187,9 @@ def main():
         X_test=x_test, y_test=y_test,
         metadata=metadata,
     )
-    report.to_markdown(str(HERE / "report.md"))
-    report.to_html(str(HERE / "report.html"))
+    title = "vibe-check report: FNO on 1-D Burgers"
+    report.to_markdown(str(HERE / "report.md"), title=title)
+    report.to_html(str(HERE / "report.html"), title=title)
     print(f"FNO/Burgers: overall {report.summary().value.upper()} "
           f"over {len(report.results)} checks. Wrote report.md and report.html.")
 

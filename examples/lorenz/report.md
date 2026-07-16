@@ -1,20 +1,33 @@
-# vibe-check report
+# vibe-check report: Lorenz trajectory MLP
 
 Overall: **WARN**
+
+| check | status | summary |
+| --- | --- | --- |
+| leakage.split_overlap | WARN | 16 near-duplicate row(s) across splits (standardized distance < 0.001) |
+| distribution.drift | WARN | moderate marginal drift (max KS 0.18) vs X_val |
+| calibration.coverage | WARN | stated uncertainty is loosely calibrated (max gap 0.09); underconfident (intervals too wide) |
+| leakage.normalization | PASS | normalization statistics match the train-only statistics |
+| distribution.coverage | PASS | 0.0% of test points outside the training domain (within tolerance) |
+| error.pointwise | PASS | RMSE 0.1443, skill 0.98 |
+| export.roundtrip | PASS | exported model matches in-memory model (max abs diff 3.62e-06) |
+| speed.inference | PASS | within budget: 730327 samples/s, 1.37e-06s/sample |
+| error.field | SKIP | skipped: output is not a spatial field (field size 18) |
+| constraints.physical | SKIP | skipped: need predict, X_test, and metadata['constraints'] |
 
 ## leakage.normalization - PASS
 normalization statistics match the train-only statistics
 
-- `rel_distance_to_train_stats`: 0.0
-- `rel_distance_to_full_stats`: 0.6085786599796111
+- `rel_distance_to_train_stats`: 0
+- `rel_distance_to_full_stats`: 0.01109
 - `rtol`: 0.001
 
 ## leakage.split_overlap - WARN
 16 near-duplicate row(s) across splits (standardized distance < 0.001)
 
-- `exact_duplicate_rows`: 0.0
-- `near_duplicate_rows`: 16.0
-- `min_standardized_distance`: 0.0007607884718584963
+- `exact_duplicate_rows`: 0
+- `near_duplicate_rows`: 16
+- `min_standardized_distance`: 0.0007608
 - `atol`: 0.001
 
 - X_train vs X_val: 0 exact, 16 near-duplicate rows
@@ -23,33 +36,40 @@ normalization statistics match the train-only statistics
 - note: splits over 3000 rows were subsampled
 
 ## distribution.coverage - PASS
-test points are within the training domain
+0.0% of test points outside the training domain (within tolerance)
 
-- `frac_test_out_of_domain`: 0.0
-- `n_features_with_extrapolation`: 0.0
-- `max_feature_out_of_domain_frac`: 0.0
-- `max_excursion_in_feature_ranges`: 0.0
+- `frac_test_out_of_domain`: 0
+- `n_features_with_extrapolation`: 0
+- `max_feature_out_of_domain_frac`: 0
+- `max_excursion_in_feature_ranges`: 0
+- `warn_frac`: 0.01
+- `fail_frac`: 0.1
+
+(1 figure attached; see the HTML report)
 
 ## distribution.drift - WARN
 moderate marginal drift (max KS 0.18) vs X_val
 
-- `max_ks_distance`: 0.1809916537867079
-- `worst_feature_index`: 0.0
-- `mean_ks_distance`: 0.10253565270259384
+- `max_ks_distance`: 0.181
+- `worst_feature_index`: 0
+- `mean_ks_distance`: 0.1025
 - `warn_ks`: 0.1
 - `fail_ks`: 0.2
 
 - train vs X_val: max KS 0.181 at feature 0
 - train vs X_test: max KS 0.099 at feature 0
 
+(2 figures attached; see the HTML report)
+
 ## error.pointwise - PASS
 RMSE 0.1443, skill 0.98
 
-- `rmse`: 0.14425124154464747
-- `mae`: 0.10601489648030922
-- `max_abs_error`: 1.0042311741948176
-- `r2`: 0.9998877802176956
-- `skill_vs_mean_baseline`: 0.9831755726493582
+- `rmse`: 0.1443
+- `mae`: 0.106
+- `max_abs_error`: 1.004
+- `r2`: 0.9999
+- `skill_vs_mean_baseline`: 0.9832
+- `warn_skill`: 0.5
 
 Per-channel RMSE:
 - channel 0: 0.07748
@@ -71,18 +91,25 @@ Per-channel RMSE:
 - channel 16: 0.2771
 - channel 17: 0.1576
 
+(2 figures attached; see the HTML report)
+
 ## error.field - SKIP
 skipped: output is not a spatial field (field size 18)
 
 ## calibration.coverage - WARN
 stated uncertainty is loosely calibrated (max gap 0.09); underconfident (intervals too wide)
 
-- `empirical_coverage_1sigma`: 0.7739928909952607
-- `empirical_coverage_2sigma`: 0.9662980516061085
-- `empirical_coverage_3sigma`: 0.9933846761453397
-- `nominal_coverage_1sigma`: 0.6826894921370859
-- `nominal_coverage_2sigma`: 0.9544997361036416
-- `max_abs_coverage_deviation`: 0.09130339885817484
+- `empirical_coverage_1sigma`: 0.774
+- `empirical_coverage_2sigma`: 0.9663
+- `empirical_coverage_3sigma`: 0.9934
+- `nominal_coverage_1sigma`: 0.6827
+- `nominal_coverage_2sigma`: 0.9545
+- `nominal_coverage_3sigma`: 0.9973
+- `max_abs_coverage_deviation`: 0.0913
+- `warn_tol`: 0.07
+- `fail_tol`: 0.15
+
+(1 figure attached; see the HTML report)
 
 ## constraints.physical - SKIP
 skipped: need predict, X_test, and metadata['constraints']
@@ -90,16 +117,17 @@ skipped: need predict, X_test, and metadata['constraints']
 ## export.roundtrip - PASS
 exported model matches in-memory model (max abs diff 3.62e-06)
 
-- `max_abs_difference`: 3.624149272241084e-06
-- `max_rel_difference`: 0.002498659722543057
-- `fraction_mismatched`: 0.0
+- `max_abs_difference`: 3.624e-06
+- `max_rel_difference`: 0.002499
+- `fraction_mismatched`: 0
 - `atol`: 0.0001
 - `rtol`: 0.001
 
 ## speed.inference - PASS
-within budget: 770395 samples/s, 1.3e-06s/sample
+within budget: 730327 samples/s, 1.37e-06s/sample
 
-- `median_batch_seconds`: 0.0021910829818807542
-- `throughput_samples_per_s`: 770395.285782867
-- `latency_per_sample_s`: 1.2980349418724847e-06
-- `n_samples`: 1688.0
+- `median_batch_seconds`: 0.002311
+- `throughput_samples_per_s`: 7.303e+05
+- `latency_per_sample_s`: 1.369e-06
+- `n_samples`: 1688
+- `min_throughput`: 10000
