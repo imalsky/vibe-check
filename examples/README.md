@@ -2,27 +2,51 @@
 
 Three small surrogates that cover the common shapes of scientific ML, used to
 validate `vibe-check` and to serve as report templates other groups can adapt.
+Each directory has a self-contained `run.py` that generates its data, trains a
+small surrogate, runs `vibe-check`, and writes `report.md` and `report.html`
+next to the script. The generated reports are checked in as templates; the raw
+data and trained weights are not (the scripts regenerate them, deterministically
+from a fixed seed).
 
-Each example directory will contain: a script that trains a small surrogate, a
-script that runs `vibe-check` on it, and the resulting report checked in as a
-template. Data and trained weights are gitignored; the scripts regenerate them.
+## Running
+
+From the repository root, install the package with the plotting extra and the
+example's requirements, then run its script:
+
+```
+pip install -e ".[viz]"
+pip install -r examples/robertson/requirements.txt
+python examples/robertson/run.py
+```
+
+The same pattern applies to `examples/lorenz` and `examples/fno_burgers` (the
+FNO example needs PyTorch).
 
 ## robertson/ - local state-to-state emulator
 
-The Robertson stiff chemical-kinetics problem: a canonical three-species ODE
-with widely separated reaction timescales. The surrogate maps a state to the
-next state. Good stress test for positivity and mass-conservation constraints.
+The Robertson stiff chemical-kinetics problem: a three-species ODE with widely
+separated timescales. An MLP maps a state (plus log step size) to the next
+state. Many trajectories are split by whole trajectory, the correct hold-out for
+sequential data. Highlights the normalization, mass-conservation, and positivity
+checks. Committed report: overall WARN (high skill, with cautions on
+near-duplicate attractor states and mild drift).
 
 ## lorenz/ - ordered-output trajectory emulator
 
-The Lorenz system: the surrogate predicts a time-ordered state trajectory on a
-fixed output grid. Exercises the error and coverage checks on sequential output.
+The Lorenz system: an MLP predicts the next several states on a fixed time grid.
+A per-channel predictive standard deviation is estimated from validation
+residuals, so this example also exercises `calibration.coverage`. Committed
+report: overall WARN (skill 0.98, with a calibration caution on the constant
+per-channel uncertainty).
 
 ## fno_burgers/ - spatial-field emulator
 
-A Fourier Neural Operator on a standard benchmark (Burgers, extendable to Darcy
-flow and Navier-Stokes). Exercises the field-level error maps and the
-distribution-coverage checks on function-space data.
+A Fourier Neural Operator learning the 1-D viscous Burgers solution operator
+(initial condition -> solution at a fixed time). Because the output is a spatial
+field, this example exercises the field-level error maps (`error.field`) and a
+real export round-trip (TorchScript trace vs eager). Committed report: overall
+WARN (0.6% mean field error, skill 0.99, with a calibration caution).
 
-Deliberately built to run and document within the fellowship, but broad enough
-to show the validation setup on local, sequential, and spatial-field models.
+All three are deliberately small enough to run and document within the
+fellowship, but broad enough to show the validation setup on local, sequential,
+and spatial-field models.

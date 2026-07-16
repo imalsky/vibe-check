@@ -27,7 +27,7 @@ tested, and its behavior is documented.
 ## M4 (Sep-Nov) - Validate, document, release
 - [x] Robertson example + report template
 - [x] Lorenz example + report template
-- [ ] FNO (Burgers) example + report template
+- [x] FNO (Burgers) example + report template
 - [ ] Tutorial / end-to-end workflow doc
 - [ ] Tagged release; archive examples
 - [ ] URSSI case study on normalization leakage

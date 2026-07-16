@@ -1,0 +1,4 @@
+# Dependencies for the FNO Burgers example (on top of vibe-check[viz]).
+numpy>=1.24
+torch>=2.0
+matplotlib>=3.7
