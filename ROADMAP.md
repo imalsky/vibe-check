@@ -25,7 +25,7 @@ tested, and its behavior is documented.
 - [x] `speed.inference`
 
 ## M4 (Sep-Nov) - Validate, document, release
-- [ ] Robertson example + report template
+- [x] Robertson example + report template
 - [ ] Lorenz example + report template
 - [ ] FNO (Burgers) example + report template
 - [ ] Tutorial / end-to-end workflow doc
