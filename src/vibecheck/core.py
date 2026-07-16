@@ -233,3 +233,24 @@ def check(
                 )
             )
     return report
+
+
+def _register_default_checks() -> None:
+    """Populate the registry with the checks that are implemented.
+
+    Imported here, at module load, rather than at the top of the file: the
+    check modules import ``CheckResult`` from this module, so importing them at
+    the top would create a cycle. A check is added to this list in the same
+    change that implements and tests it, so the registry never holds a stub
+    that would raise.
+    """
+    from .checks import leakage
+
+    _REGISTERED_CHECKS.extend(
+        [
+            leakage.normalization,
+        ]
+    )
+
+
+_register_default_checks()

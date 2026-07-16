@@ -26,14 +26,16 @@ def test_status_ranking():
     assert vc.Status.ERROR.rank > vc.Status.FAIL.rank
 
 
-def test_check_runs_with_no_registered_checks():
+def test_check_runs_registered_checks():
     def predict(x):
         return np.asarray(x)
 
     report = vc.check(predict=predict, X_test=np.zeros((4, 2)), y_test=np.zeros((4, 2)))
     assert isinstance(report, vc.Report)
-    # No checks registered yet, so the run is honestly empty.
-    assert report.results == []
+    # At least one check is registered, and none should raise (ERROR) or
+    # silently pass when their required inputs are missing.
+    assert report.results
+    assert all(r.status is not vc.Status.ERROR for r in report.results)
 
 
 def test_report_markdown_roundtrip():

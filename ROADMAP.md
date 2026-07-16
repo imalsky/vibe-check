@@ -11,7 +11,7 @@ tested, and its behavior is documented.
 - [x] `report.to_html` with embedded figures
 
 ## M2 (Jul-Aug) - Split, normalization, distribution, export
-- [ ] `leakage.normalization`
+- [x] `leakage.normalization`
 - [ ] `leakage.split_overlap`
 - [ ] `distribution.coverage`
 - [ ] `distribution.drift`
