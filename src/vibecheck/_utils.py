@@ -33,10 +33,17 @@ def get_array(context: dict[str, Any], key: str) -> np.ndarray | None:
 
 
 def as_2d(a: np.ndarray) -> np.ndarray:
-    """Reshape to ``(n_samples, n_features)`` by flattening trailing axes."""
+    """Reshape to ``(n_samples, n_features)`` by flattening trailing axes.
+
+    Empty arrays are handled explicitly: ``reshape(0, -1)`` is ambiguous in
+    numpy, so a zero-row input keeps its flattened trailing size (a 1-D empty
+    array becomes ``(0, 1)``).
+    """
     a = np.asarray(a)
     if a.ndim == 1:
         return a.reshape(-1, 1)
+    if a.size == 0:
+        return a.reshape(a.shape[0], int(np.prod(a.shape[1:])))
     return a.reshape(a.shape[0], -1)
 
 

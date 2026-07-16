@@ -61,6 +61,52 @@ def test_monotonic_pass():
     assert result.status is vc.Status.PASS
 
 
+def test_monotonic_fail_on_decreasing_rows():
+    y = -np.cumsum(np.ones((50, 10)), axis=-1)  # strictly decreasing rows
+    result = constraints.physical(
+        X_test=np.zeros((50, 1)),
+        predict=_const_predict(y),
+        metadata={"constraints": [{"type": "monotonic", "axis": -1}]},
+    )
+    assert result.status is vc.Status.FAIL
+    assert result.metrics["max_violation_fraction"] > 0.01
+
+
+def test_bounds_fail_on_large_out_of_bounds_fraction():
+    y = np.full((100, 2), 5.0)  # every value above the upper bound
+    result = constraints.physical(
+        X_test=np.zeros((100, 1)),
+        predict=_const_predict(y),
+        metadata={"constraints": [{"type": "bounds", "low": 0.0, "high": 1.0}]},
+    )
+    assert result.status is vc.Status.FAIL
+    assert result.metrics["max_violation_fraction"] == 1.0
+
+
+def test_constraint_named_max_does_not_collide_with_aggregate():
+    y = np.full((100, 2), 0.5)
+    y[0, 0] = 2.0  # small bounds violation on channel 0 ("max" constraint)
+    y[:, 1] = -1.0  # large positivity violation on channel 1
+    result = constraints.physical(
+        X_test=np.zeros((100, 1)),
+        predict=_const_predict(y),
+        metadata={
+            "constraints": [
+                {
+                    "type": "bounds",
+                    "low": 0.0,
+                    "high": 1.0,
+                    "channels": [0],
+                    "name": "max",
+                },
+                {"type": "positivity", "channels": [1]},
+            ]
+        },
+    )
+    assert result.metrics["constraint_max_violation_fraction"] == 0.01
+    assert result.metrics["max_violation_fraction"] == 1.0
+
+
 def test_bounds_warn_on_small_fraction():
     y = np.full((1000, 1), 0.5)
     y[0, 0] = 2.0  # single value out of bounds -> fraction 0.001

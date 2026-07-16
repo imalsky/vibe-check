@@ -82,6 +82,32 @@ def test_export_fail_on_shape_mismatch():
     assert result.status is vc.Status.FAIL
 
 
+def test_export_fail_names_in_memory_path_when_it_raises():
+    x = np.zeros((10, 4))
+
+    def bad(xx):
+        raise RuntimeError("boom")
+
+    result = export.roundtrip(
+        X_test=x, predict=bad, metadata={"exported_predict": lambda xx: xx}
+    )
+    assert result.status is vc.Status.FAIL
+    assert "in-memory predict raised" in result.summary
+
+
+def test_export_fail_names_exported_path_when_it_raises():
+    x = np.zeros((10, 4))
+
+    def bad(xx):
+        raise RuntimeError("boom")
+
+    result = export.roundtrip(
+        X_test=x, predict=lambda xx: xx, metadata={"exported_predict": bad}
+    )
+    assert result.status is vc.Status.FAIL
+    assert "exported predict raised" in result.summary
+
+
 def test_export_skips_without_exported_model():
     rng = np.random.default_rng(5)
     x = rng.normal(size=(10, 4))

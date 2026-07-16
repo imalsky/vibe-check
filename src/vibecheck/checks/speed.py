@@ -27,6 +27,8 @@ def inference(**context: Any) -> CheckResult:
     - ``max_latency_s``: allowed seconds per sample (FAIL if slower);
     - ``warmup`` (default 1) and ``repeats`` (default 3) control the timing.
 
+    Budget thresholds that were provided are echoed in the metrics.
+
     With no budget set the check cannot say whether the model is fast enough, so
     it SKIPs, carrying the measured numbers in ``metrics`` for the report rather
     than passing silently. Needs ``predict`` and a non-empty ``X_test``.
@@ -73,6 +75,10 @@ def inference(**context: Any) -> CheckResult:
 
     min_throughput = cfg.get("min_throughput")
     max_latency = cfg.get("max_latency_s")
+    if min_throughput is not None:
+        metrics["min_throughput"] = float(min_throughput)
+    if max_latency is not None:
+        metrics["max_latency_s"] = float(max_latency)
     if min_throughput is None and max_latency is None:
         return CheckResult(
             name=name,

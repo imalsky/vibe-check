@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 import vibecheck as vc
 from vibecheck.checks import calibration
@@ -64,9 +65,46 @@ def test_calibration_skips_without_uncertainty():
 
 
 def test_calibration_attaches_figure_when_requested():
+    pytest.importorskip("matplotlib")
     x, y = _standard_normal_targets(seed=5)
     result = calibration.coverage(
         X_test=x, y_test=y, predict=lambda xx: np.zeros((xx.shape[0], 1)),
         metadata={"predicted_std": np.ones_like(y), "make_figures": True},
     )
     assert len(result.figures) == 1
+
+
+def test_calibration_fail_when_predict_raises():
+    x, y = _standard_normal_targets(seed=6)
+
+    def predict(xx):
+        raise RuntimeError("boom")
+
+    result = calibration.coverage(
+        X_test=x, y_test=y, predict=predict, metadata={"predicted_std": 1.0}
+    )
+    assert result.status is vc.Status.FAIL
+    assert "predict raised" in result.summary
+
+
+def test_calibration_fail_on_mean_shape_mismatch():
+    x, y = _standard_normal_targets(seed=7)
+    result = calibration.coverage(
+        X_test=x,
+        y_test=y,
+        predict=lambda xx: np.zeros((xx.shape[0] + 1, 1)),  # wrong sample count
+        metadata={"predicted_std": 1.0},
+    )
+    assert result.status is vc.Status.FAIL
+    assert "shape" in result.summary
+
+
+def test_calibration_reports_nominal_3sigma_and_thresholds():
+    x, y = _standard_normal_targets(seed=8)
+    result = calibration.coverage(
+        X_test=x, y_test=y, predict=lambda xx: np.zeros((xx.shape[0], 1)),
+        metadata={"predicted_std": np.ones_like(y)},
+    )
+    assert abs(result.metrics["nominal_coverage_3sigma"] - 0.9973) < 1e-3
+    assert result.metrics["warn_tol"] == 0.07
+    assert result.metrics["fail_tol"] == 0.15

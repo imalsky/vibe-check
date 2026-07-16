@@ -36,9 +36,12 @@ def normalization(**context: Any) -> CheckResult:
     Assumes the provided statistics are per-feature and aligned with the input
     columns. SKIPs when the statistics or the training split are missing, or
     when there is no held-out split to compare against (leakage cannot be
-    assessed from training data alone). The match tolerance is tunable via
-    ``metadata['normalization']['rtol']`` (default ``1e-3``): the relative
-    distance under which provided statistics count as a match.
+    assessed from training data alone). The mean discrepancy is scaled by the
+    reference standard deviation (so centered, near-zero-mean features do not
+    inflate the distance) and the std discrepancy is relative to the reference
+    std. The match tolerance is tunable via
+    ``metadata['normalization']['rtol']`` (default ``1e-3``): the distance
+    under which provided statistics count as a match.
     """
     name = "leakage.normalization"
     metadata = context.get("metadata") or {}
@@ -76,11 +79,19 @@ def normalization(**context: Any) -> CheckResult:
     def rel(a: np.ndarray, b: np.ndarray) -> float:
         return float(np.mean(np.abs(a - b) / (np.abs(b) + 1e-12)))
 
+    def mean_dist(a: np.ndarray, ref_mean: np.ndarray, ref_std: np.ndarray) -> float:
+        # The mean gap is scaled by the reference std, not the reference mean:
+        # centered features have a near-zero mean, and dividing by it would
+        # blow up the distance for perfectly correct statistics.
+        return float(np.mean(np.abs(a - ref_mean) / (ref_std + 1e-12)))
+
+    train_mean, train_std = x_train.mean(axis=0), x_train.std(axis=0)
+    full_mean, full_std = x_all.mean(axis=0), x_all.std(axis=0)
     d_train = 0.5 * (
-        rel(mean_provided, x_train.mean(axis=0)) + rel(std_provided, x_train.std(axis=0))
+        mean_dist(mean_provided, train_mean, train_std) + rel(std_provided, train_std)
     )
     d_full = 0.5 * (
-        rel(mean_provided, x_all.mean(axis=0)) + rel(std_provided, x_all.std(axis=0))
+        mean_dist(mean_provided, full_mean, full_std) + rel(std_provided, full_std)
     )
     metrics = {
         "rel_distance_to_train_stats": d_train,

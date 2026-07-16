@@ -33,8 +33,11 @@ def physical(**context: Any) -> CheckResult:
 
     Every type accepts an absolute ``tol`` (default 1e-6), an optional
     ``channels`` list (with ``channel_axis``, default last) to restrict which
-    outputs it applies to, and a ``name`` for the report. The verdict is on the
-    worst per-constraint violation fraction: above ``fail_frac`` (default 0.01,
+    outputs it applies to, and a ``name`` for the report. Per-constraint
+    violation fractions are reported under
+    ``constraint_<name>_violation_fraction`` so user labels cannot collide with
+    the aggregate ``max_violation_fraction`` key. The verdict is on the worst
+    per-constraint violation fraction: above ``fail_frac`` (default 0.01,
     under ``metadata['constraints_config']``) -> FAIL, any smaller violation ->
     WARN, none -> PASS. Needs ``predict``, ``X_test``, and at least one
     evaluable constraint; SKIPs otherwise.
@@ -72,7 +75,7 @@ def physical(**context: Any) -> CheckResult:
         n_viol, n_total, max_mag = result
         frac = n_viol / n_total if n_total else 0.0
         worst_frac = max(worst_frac, frac)
-        metrics[f"{label}_violation_fraction"] = frac
+        metrics[f"constraint_{label}_violation_fraction"] = frac
         detail_lines.append(
             f"- {label}: {n_viol}/{n_total} violations "
             f"(fraction {frac:.3g}, max magnitude {max_mag:.3g})"

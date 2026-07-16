@@ -39,6 +39,35 @@ def test_normalization_fail_when_fit_on_full_data():
     ]
 
 
+def test_normalization_handles_zero_mean_features():
+    # Regression test: centered features have a near-zero mean, and a mean gap
+    # normalized by the mean itself would blow up for correct train-only stats.
+    rng = np.random.default_rng(5)
+    x_train = rng.normal(size=(200, 3))
+    x_train = (x_train - x_train.mean(axis=0)) / x_train.std(axis=0)
+    x_test = rng.normal(size=(100, 3))
+    x_test = (x_test - x_test.mean(axis=0)) / x_test.std(axis=0) * 2.0
+
+    # Train-only statistics recomputed in float32 arithmetic: absolutely tiny
+    # discrepancies, huge relative to the near-zero mean. Must PASS.
+    norm_train = {
+        "mean": x_train.astype(np.float32).mean(axis=0),
+        "std": x_train.astype(np.float32).std(axis=0),
+    }
+    result = leakage.normalization(
+        X_train=x_train, X_test=x_test, metadata={"normalization": norm_train}
+    )
+    assert result.status is vc.Status.PASS
+
+    # Full-data statistics must still be caught as leakage.
+    x_all = np.concatenate([x_train, x_test], axis=0)
+    norm_full = {"mean": x_all.mean(axis=0), "std": x_all.std(axis=0)}
+    result_full = leakage.normalization(
+        X_train=x_train, X_test=x_test, metadata={"normalization": norm_full}
+    )
+    assert result_full.status is vc.Status.FAIL
+
+
 def test_normalization_skips_without_stats():
     x_train, x_test = _split()
     result = leakage.normalization(X_train=x_train, X_test=x_test, metadata={})

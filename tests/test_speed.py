@@ -41,11 +41,24 @@ def test_speed_fail_with_zero_latency_budget():
     assert result.status is vc.Status.FAIL
 
 
+def test_speed_echoes_budget_thresholds_in_metrics():
+    x = np.zeros((50, 4))
+    result = speed.inference(
+        X_test=x,
+        predict=_identity,
+        metadata={"speed": {"min_throughput": 1.0, "max_latency_s": 10.0}},
+    )
+    assert result.metrics["min_throughput"] == 1.0
+    assert result.metrics["max_latency_s"] == 10.0
+
+
 def test_speed_skips_without_budget_but_reports_numbers():
     x = np.zeros((100, 4))
     result = speed.inference(X_test=x, predict=_identity)
     assert result.status is vc.Status.SKIP
     assert result.metrics["throughput_samples_per_s"] > 0.0
+    assert "min_throughput" not in result.metrics
+    assert "max_latency_s" not in result.metrics
 
 
 def test_speed_skips_without_inputs():

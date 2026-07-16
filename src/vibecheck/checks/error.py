@@ -16,6 +16,11 @@ from .._utils import get_array, skip, want_figures
 from ..core import CheckResult, Status
 
 
+def _squeezed(shape: tuple[int, ...]) -> tuple[int, ...]:
+    """Return ``shape`` with size-1 axes removed, e.g. ``(n, 1)`` -> ``(n,)``."""
+    return tuple(d for d in shape if d != 1)
+
+
 def pointwise(**context: Any) -> CheckResult:
     """Predicted-vs-true error, with a skill score against a mean baseline.
 
@@ -29,12 +34,19 @@ def pointwise(**context: Any) -> CheckResult:
     - predictions with NaN/inf, a shape mismatch, or a raised ``predict`` -> FAIL;
     - skill at or below zero (no better than predicting the mean) -> FAIL;
     - an RMSE budget ``metadata['error']['max_rmse']`` that is exceeded -> FAIL;
+    - skill undefined because the target is constant -> WARN;
     - positive but low skill (below ``warn_skill``, default 0.5) -> WARN;
     - otherwise PASS.
 
+    A prediction is only reshaped to ``y_test``'s shape when the two shapes
+    agree after dropping size-1 axes; any other mismatch is a FAIL rather than
+    a silent reshape. The training-mean baseline is used only when ``y_train``
+    has the same per-sample shape as ``y_test``; otherwise skill falls back to
+    R^2 and the details say so. Effective thresholds are echoed in the metrics.
+
     Needs ``predict``, ``X_test``, and ``y_test``; SKIPs otherwise. Set
     ``metadata['make_figures'] = True`` for a predicted-vs-true scatter and a
-    residual histogram.
+    residual histogram (built from the finite values only).
     """
     name = "error.pointwise"
     metadata = context.get("metadata") or {}
@@ -54,7 +66,7 @@ def pointwise(**context: Any) -> CheckResult:
         )
 
     if y_hat.shape != y_true.shape:
-        if y_hat.size == y_true.size:
+        if _squeezed(y_hat.shape) == _squeezed(y_true.shape):
             y_hat = y_hat.reshape(y_true.shape)
         else:
             return CheckResult(
@@ -76,23 +88,36 @@ def pointwise(**context: Any) -> CheckResult:
     ss_tot = float(np.sum((yt - yt.mean()) ** 2))
     r2 = 1.0 - float(np.sum(resid**2)) / ss_tot if ss_tot > 0 else float("nan")
 
+    detail_lines = []
     y_train = get_array(context, "y_train")
-    if y_train is not None:
+    if y_train is not None and _squeezed(y_train.shape[1:]) == _squeezed(
+        y_true.shape[1:]
+    ):
         base = y_train.reshape(-1, *y_true.shape[1:]).mean(axis=0)
         rmse_base = float(np.sqrt(np.mean((y_true - base) ** 2)))
         skill = 1.0 - rmse / rmse_base if rmse_base > 0 else float("nan")
     else:
+        if y_train is not None:
+            detail_lines.append(
+                f"y_train per-sample shape {y_train.shape[1:]} does not match "
+                f"y_test per-sample shape {y_true.shape[1:]}; skill falls back "
+                "to R^2 instead of the training-mean baseline"
+            )
         skill = r2
 
+    max_rmse = cfg.get("max_rmse")
+    warn_skill = float(cfg.get("warn_skill", 0.5))
     metrics = {
         "rmse": rmse,
         "mae": mae,
         "max_abs_error": max_abs,
         "r2": r2,
         "skill_vs_mean_baseline": skill,
+        "warn_skill": warn_skill,
     }
+    if max_rmse is not None:
+        metrics["max_rmse"] = float(max_rmse)
 
-    detail_lines = []
     n_ch = int(np.prod(y_true.shape[1:])) if y_true.ndim >= 2 else 1
     if 1 < n_ch <= 20:
         per_ch = np.sqrt(
@@ -108,28 +133,37 @@ def pointwise(**context: Any) -> CheckResult:
     figures = []
     plt = want_figures(context)
     if plt is not None and resid.size:
-        rng = np.random.default_rng(0)
-        idx = (
-            rng.choice(yt.size, size=2000, replace=False) if yt.size > 2000 else slice(None)
-        )
-        fig1, ax1 = plt.subplots(figsize=(4, 4))
-        ax1.scatter(yt[idx], yp[idx], s=6, alpha=0.4, color="#1a6acf")
-        lims = [float(min(yt.min(), yp.min())), float(max(yt.max(), yp.max()))]
-        ax1.plot(lims, lims, "--", color="#888888", lw=1)
-        ax1.set_xlabel("true")
-        ax1.set_ylabel("predicted")
-        ax1.set_title("error.pointwise: predicted vs true")
-        fig1.tight_layout()
-        fig2, ax2 = plt.subplots(figsize=(5, 3))
-        ax2.hist(resid, bins=40, color="#1a6acf")
-        ax2.set_xlabel("residual (predicted - true)")
-        ax2.set_ylabel("count")
-        ax2.set_title("error.pointwise: residuals")
-        fig2.tight_layout()
-        figures += [fig1, fig2]
+        # Figures are built from the finite values only, so non-finite
+        # predictions still reach the FAIL verdict instead of crashing
+        # matplotlib on infinite axis limits or histogram ranges.
+        finite = np.isfinite(yt) & np.isfinite(yp)
+        yt_f, yp_f, resid_f = yt[finite], yp[finite], resid[finite]
+        if yt_f.size:
+            rng = np.random.default_rng(0)
+            idx = (
+                rng.choice(yt_f.size, size=2000, replace=False)
+                if yt_f.size > 2000
+                else slice(None)
+            )
+            fig1, ax1 = plt.subplots(figsize=(4, 4))
+            ax1.scatter(yt_f[idx], yp_f[idx], s=6, alpha=0.4, color="#1a6acf")
+            lims = [
+                float(min(yt_f.min(), yp_f.min())),
+                float(max(yt_f.max(), yp_f.max())),
+            ]
+            ax1.plot(lims, lims, "--", color="#888888", lw=1)
+            ax1.set_xlabel("true")
+            ax1.set_ylabel("predicted")
+            ax1.set_title("error.pointwise: predicted vs true")
+            fig1.tight_layout()
+            fig2, ax2 = plt.subplots(figsize=(5, 3))
+            ax2.hist(resid_f, bins=40, color="#1a6acf")
+            ax2.set_xlabel("residual (predicted - true)")
+            ax2.set_ylabel("count")
+            ax2.set_title("error.pointwise: residuals")
+            fig2.tight_layout()
+            figures += [fig1, fig2]
 
-    max_rmse = cfg.get("max_rmse")
-    warn_skill = float(cfg.get("warn_skill", 0.5))
     skill_val = skill if np.isfinite(skill) else r2
 
     if not all_finite:
@@ -138,10 +172,13 @@ def pointwise(**context: Any) -> CheckResult:
     elif max_rmse is not None and rmse > float(max_rmse):
         status = Status.FAIL
         summary = f"RMSE {rmse:.4g} exceeds the budget {float(max_rmse):.4g}"
-    elif np.isfinite(skill_val) and skill_val <= 0:
+    elif not np.isfinite(skill_val):
+        status = Status.WARN
+        summary = f"RMSE {rmse:.4g}; skill undefined (constant target)"
+    elif skill_val <= 0:
         status = Status.FAIL
         summary = f"no skill: RMSE {rmse:.4g} is no better than predicting the mean"
-    elif np.isfinite(skill_val) and skill_val < warn_skill:
+    elif skill_val < warn_skill:
         status = Status.WARN
         summary = f"low skill {skill_val:.2f} (RMSE {rmse:.4g})"
     else:
@@ -178,9 +215,15 @@ def field(**context: Any) -> CheckResult:
 
     Verdict: NaN/inf or shape mismatch -> FAIL; no skill vs the mean field ->
     FAIL; mean percent error above ``fail_pct`` (default 20) -> FAIL; above
-    ``warn_pct`` (default 5) -> WARN; otherwise PASS. With
-    ``metadata['make_figures'] = True`` the worst sample's true / predicted /
-    percent-error maps are attached (like Figure 2 of the proposal).
+    ``warn_pct`` (default 5) -> WARN; otherwise PASS. Predictions are only
+    reshaped to ``y_test``'s shape when the two shapes agree after dropping
+    size-1 axes; any other mismatch is a FAIL. The mean-field baseline uses
+    ``y_train`` only when its per-sample shape matches ``y_test``; otherwise
+    the baseline is derived from ``y_test`` itself and the details say so.
+    Effective thresholds are echoed in the metrics. With
+    ``metadata['make_figures'] = True`` a side-by-side true / predicted /
+    percent-error panel for the worst sample (largest per-sample percent
+    error) is attached; the figure is skipped when predictions are not finite.
     """
     name = "error.field"
     metadata = context.get("metadata") or {}
@@ -206,7 +249,7 @@ def field(**context: Any) -> CheckResult:
             name=name, status=Status.FAIL, summary=f"predict raised: {exc!r}"
         )
     if y_hat.shape != y_true.shape:
-        if y_hat.size == y_true.size:
+        if _squeezed(y_hat.shape) == _squeezed(y_true.shape):
             y_hat = y_hat.reshape(y_true.shape)
         else:
             return CheckResult(
@@ -225,14 +268,28 @@ def field(**context: Any) -> CheckResult:
     per_sample_pct = 100.0 * per_sample_mae / denom
     mean_abs_pct = float(np.mean(per_sample_pct))
     max_abs_pct = float(np.max(per_sample_pct))
-    worst = int(np.argmax(per_sample_mae))
+    worst = int(np.argmax(per_sample_pct))
     rmse = float(np.sqrt(np.mean((y_hat - y_true) ** 2)))
 
+    detail_lines = []
     y_train = get_array(context, "y_train")
-    ref = y_train if y_train is not None else y_true
+    if y_train is not None and _squeezed(y_train.shape[1:]) == _squeezed(field_shape):
+        ref = y_train
+    else:
+        if y_train is not None:
+            detail_lines.append(
+                f"y_train per-sample shape {y_train.shape[1:]} does not match "
+                f"the field shape {field_shape}; the mean-field baseline is "
+                "derived from y_test instead"
+            )
+        ref = y_true
     base = ref.reshape(-1, *field_shape).mean(axis=0)
     rmse_base = float(np.sqrt(np.mean((y_true - base) ** 2)))
     skill = 1.0 - rmse / rmse_base if rmse_base > 0 else float("nan")
+
+    warn_pct = float(cfg.get("warn_pct", 5.0))
+    fail_pct = float(cfg.get("fail_pct", 20.0))
+    max_rmse = cfg.get("max_rmse")
 
     metrics = {
         "field_rmse": rmse,
@@ -240,16 +297,16 @@ def field(**context: Any) -> CheckResult:
         "max_abs_percent_error": max_abs_pct,
         "worst_sample_index": float(worst),
         "skill_vs_mean_field": skill,
+        "warn_pct": warn_pct,
+        "fail_pct": fail_pct,
     }
 
     figures = []
     plt = want_figures(context)
-    if plt is not None:
+    if plt is not None and all_finite:
+        # Skipped for non-finite predictions so the FAIL verdict below is
+        # reached instead of matplotlib crashing on NaN/inf data.
         figures = _field_figures(plt, y_true[worst], y_hat[worst])
-
-    warn_pct = float(cfg.get("warn_pct", 5.0))
-    fail_pct = float(cfg.get("fail_pct", 20.0))
-    max_rmse = cfg.get("max_rmse")
 
     if not all_finite:
         status, summary = Status.FAIL, "field predictions contain NaN or inf"
@@ -270,7 +327,12 @@ def field(**context: Any) -> CheckResult:
         summary = f"mean field error {mean_abs_pct:.1f}%, skill {skill:.2f}"
 
     return CheckResult(
-        name=name, status=status, summary=summary, metrics=metrics, figures=figures
+        name=name,
+        status=status,
+        summary=summary,
+        metrics=metrics,
+        details="\n".join(detail_lines),
+        figures=figures,
     )
 
 

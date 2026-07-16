@@ -29,8 +29,10 @@ def coverage(**context: Any) -> CheckResult:
     The verdict is on the largest gap between empirical and nominal coverage:
     above ``fail_tol`` (default 0.15) -> FAIL, above ``warn_tol`` (default
     0.07) -> WARN, otherwise PASS. Empirical coverage below nominal means the
-    intervals are too narrow (overconfident); above means too wide. Thresholds
-    live under ``metadata['calibration']``. SKIPs when no uncertainty is given.
+    intervals are too narrow (overconfident); above means too wide. A raised
+    ``predict``, or a predicted mean whose shape cannot be aligned with
+    ``y_test``, is a FAIL. Thresholds live under ``metadata['calibration']``
+    and are echoed in the metrics. SKIPs when no uncertainty is given.
     Set ``metadata['make_figures'] = True`` for a reliability plot.
     """
     name = "calibration.coverage"
@@ -43,13 +45,18 @@ def coverage(**context: Any) -> CheckResult:
         return skip(name, "need predict, X_test, and y_test")
 
     y_true = np.asarray(y_test, dtype=float)
-    out = predict(np.asarray(x_test))
+    try:
+        out = predict(np.asarray(x_test))
+    except Exception as exc:
+        return CheckResult(
+            name=name, status=Status.FAIL, summary=f"predict raised: {exc!r}"
+        )
     if isinstance(out, (tuple, list)) and len(out) == 2:
         mean = np.asarray(out[0], dtype=float)
         std = np.asarray(out[1], dtype=float)
     else:
         mean = np.asarray(out, dtype=float)
-        provided = metadata.get("predicted_std", metadata.get("uncertainty"))
+        provided = metadata.get("predicted_std")
         std = None if provided is None else np.asarray(provided, dtype=float)
     if std is None:
         return skip(
@@ -60,6 +67,15 @@ def coverage(**context: Any) -> CheckResult:
 
     if mean.shape != y_true.shape and mean.size == y_true.size:
         mean = mean.reshape(y_true.shape)
+    if mean.shape != y_true.shape:
+        return CheckResult(
+            name=name,
+            status=Status.FAIL,
+            summary=(
+                f"prediction shape {mean.shape} does not match "
+                f"y_test shape {y_true.shape}"
+            ),
+        )
     if std.shape != y_true.shape:
         if std.size == 1:
             std = np.full(y_true.shape, float(std))
@@ -81,13 +97,18 @@ def coverage(**context: Any) -> CheckResult:
         else "underconfident (intervals too wide)"
     )
 
+    warn_tol = float(cfg.get("warn_tol", 0.07))
+    fail_tol = float(cfg.get("fail_tol", 0.15))
     metrics = {
         "empirical_coverage_1sigma": empirical[1.0],
         "empirical_coverage_2sigma": empirical[2.0],
         "empirical_coverage_3sigma": empirical[3.0],
         "nominal_coverage_1sigma": nominal[1.0],
         "nominal_coverage_2sigma": nominal[2.0],
+        "nominal_coverage_3sigma": nominal[3.0],
         "max_abs_coverage_deviation": max_dev,
+        "warn_tol": warn_tol,
+        "fail_tol": fail_tol,
     }
 
     figures = []
@@ -105,8 +126,6 @@ def coverage(**context: Any) -> CheckResult:
         fig.tight_layout()
         figures.append(fig)
 
-    warn_tol = float(cfg.get("warn_tol", 0.07))
-    fail_tol = float(cfg.get("fail_tol", 0.15))
     if max_dev > fail_tol:
         status = Status.FAIL
         summary = f"stated uncertainty is miscalibrated (max gap {max_dev:.2f}); {direction}"

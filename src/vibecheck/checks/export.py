@@ -27,8 +27,9 @@ def roundtrip(**context: Any) -> CheckResult:
 
     Verdict: every element within tolerance -> PASS; a small fraction differing
     (at or below ``warn_frac``, default 0.01) -> WARN; more than that -> FAIL. A
-    shape mismatch between the two paths is a FAIL. Needs ``predict``,
-    ``X_test``, and ``metadata['exported_predict']``; SKIPs otherwise.
+    shape mismatch between the two paths is a FAIL, and a raised call on either
+    path is a FAIL naming which path raised. Needs ``predict``, ``X_test``, and
+    ``metadata['exported_predict']``; SKIPs otherwise.
     """
     name = "export.roundtrip"
     metadata = context.get("metadata") or {}
@@ -46,10 +47,19 @@ def roundtrip(**context: Any) -> CheckResult:
     x = np.asarray(x_test)
     try:
         a = np.asarray(predict(x), dtype=float)
+    except Exception as exc:
+        return CheckResult(
+            name=name,
+            status=Status.FAIL,
+            summary=f"in-memory predict raised: {exc!r}",
+        )
+    try:
         b = np.asarray(exported(x), dtype=float)
     except Exception as exc:
         return CheckResult(
-            name=name, status=Status.FAIL, summary=f"a predict path raised: {exc!r}"
+            name=name,
+            status=Status.FAIL,
+            summary=f"exported predict raised: {exc!r}",
         )
 
     if a.shape != b.shape:
