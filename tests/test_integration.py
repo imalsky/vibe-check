@@ -85,6 +85,9 @@ def test_leaked_normalization_makes_report_fail():
 
 
 def test_report_renders_markdown_and_html_with_figures():
+    import pytest
+
+    pytest.importorskip("matplotlib")
     predict, data, sigma = _fitted_surrogate()
     meta = _clean_metadata(predict, data, sigma)
     meta["make_figures"] = True

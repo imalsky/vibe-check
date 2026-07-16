@@ -119,3 +119,83 @@ def test_html_writes_file(tmp_path):
     text = _report_with_two_checks().to_html(path=str(out))
     assert out.read_text(encoding="utf-8") == text
     assert "demo.pass" in out.read_text(encoding="utf-8")
+
+
+def test_html_overview_table_links_sections_worst_first():
+    html = _report_with_two_checks().to_html()
+    assert '<table class="overview">' in html
+    # The failing check is listed before the passing one in the overview.
+    assert html.index('href="#check-demo-fail"') < html.index('href="#check-demo-pass"')
+    assert 'id="check-demo-fail"' in html
+    assert 'id="check-demo-pass"' in html
+
+
+def test_html_details_preserve_line_structure():
+    report = vc.Report()
+    report.add(
+        vc.CheckResult(
+            name="demo.details",
+            status=vc.Status.PASS,
+            summary="multi-line details",
+            details="- first line\n- second line",
+        )
+    )
+    html = report.to_html()
+    assert 'class="details"' in html
+    assert "- first line\n- second line" in html
+
+
+def test_custom_title_appears_in_both_renderers():
+    report = _report_with_two_checks()
+    html = report.to_html(title="vibe-check report: demo surrogate")
+    md = report.to_markdown(title="vibe-check report: demo surrogate")
+    assert "<title>vibe-check report: demo surrogate</title>" in html
+    assert md.startswith("# vibe-check report: demo surrogate")
+
+
+def test_metric_display_formatting():
+    report = vc.Report()
+    report.add(
+        vc.CheckResult(
+            name="demo.metrics",
+            status=vc.Status.PASS,
+            summary="formatted metrics",
+            metrics={"count": 1401.0, "index": 2.0, "rmse": 0.0014506988575394902},
+        )
+    )
+    for text in (report.to_markdown(), report.to_html()):
+        assert "1401.0" not in text
+        assert "0.0014506988575394902" not in text
+    md = report.to_markdown()
+    assert "`count`: 1401" in md
+    assert "`index`: 2" in md
+    assert "`rmse`: 0.001451" in md
+
+
+def test_markdown_summary_table_and_figure_note():
+    report = _report_with_two_checks()
+    report.results[0].figures = [_StubFigure()]
+    md = report.to_markdown()
+    assert "| check | status | summary |" in md
+    # Worst first: the FAIL row precedes the PASS row in the table.
+    assert md.index("| demo.fail | FAIL |") < md.index("| demo.pass | PASS |")
+    assert "(1 figure attached; see the HTML report)" in md
+
+
+def test_markdown_empty_report_notes_no_checks():
+    md = vc.Report().to_markdown()
+    assert "No checks were run." in md
+
+
+def test_markdown_collapses_newlines_in_name_and_summary():
+    report = vc.Report()
+    report.add(
+        vc.CheckResult(
+            name="demo.inject",
+            status=vc.Status.PASS,
+            summary="line one\n## fake heading",
+        )
+    )
+    md = report.to_markdown()
+    assert "\n## fake heading" not in md
+    assert "line one ## fake heading" in md
