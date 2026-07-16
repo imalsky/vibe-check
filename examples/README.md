@@ -5,8 +5,10 @@ validate `vibe-check` and to serve as report templates other groups can adapt.
 Each directory has a self-contained `run.py` that generates its data, trains a
 small surrogate, runs `vibe-check`, and writes `report.md` and `report.html`
 next to the script. The generated reports are checked in as templates; the raw
-data and trained weights are not (the scripts regenerate them, deterministically
-from a fixed seed).
+data and trained weights are not (the scripts regenerate them from a fixed
+seed). Results are reproducible on a given machine, but bitwise identity across
+platforms is not guaranteed, and the timing numbers in the reports vary by
+machine.
 
 ## Running
 
@@ -28,16 +30,17 @@ The Robertson stiff chemical-kinetics problem: a three-species ODE with widely
 separated timescales. An MLP maps a state (plus log step size) to the next
 state. Many trajectories are split by whole trajectory, the correct hold-out for
 sequential data. Highlights the normalization, mass-conservation, and positivity
-checks. Committed report: overall WARN (high skill, with cautions on
-near-duplicate attractor states and mild drift).
+checks. Committed report: overall WARN (skill 0.99, with cautions on
+near-duplicate states across the trajectory splits and mild drift).
 
 ## lorenz/ - ordered-output trajectory emulator
 
 The Lorenz system: an MLP predicts the next several states on a fixed time grid.
 A per-channel predictive standard deviation is estimated from validation
 residuals, so this example also exercises `calibration.coverage`. Committed
-report: overall WARN (skill 0.98, with a calibration caution on the constant
-per-channel uncertainty).
+report: overall WARN (skill 0.98; cautions on the constant per-channel
+uncertainty being underconfident, a handful of near-duplicate rows across the
+gapped splits, and mild drift between the trajectory segments).
 
 ## fno_burgers/ - spatial-field emulator
 

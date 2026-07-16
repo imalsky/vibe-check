@@ -6,6 +6,8 @@ it checks what you bring.
 
 ## Install
 
+From a clone of the repository root:
+
 ```
 pip install -e ".[viz]"
 ```
@@ -59,30 +61,33 @@ report = vc.check(
         "speed": {"min_throughput": 1e4},
     },
 )
-print("overall:", report.summary().value)
+print(report)
 report.to_markdown("report.md")
 report.to_html("report.html")
 ```
 
-Running it prints something like:
+Running it prints (the speed number will vary by machine):
 
 ```
-overall: warn
-  leakage.normalization: pass
-  leakage.split_overlap: pass
-  distribution.coverage: pass
-  distribution.drift: warn
-  error.pointwise: pass
-  error.field: skip
-  calibration.coverage: skip
-  constraints.physical: skip
-  export.roundtrip: skip
-  speed.inference: pass
+vibe-check: PASS
+  leakage.normalization: PASS - normalization statistics match the train-only statistics
+  leakage.split_overlap: PASS - no duplicate or near-duplicate rows detected across splits
+  distribution.coverage: PASS - 1.0% of test points outside the training domain (within tolerance)
+  distribution.drift: PASS - train and held-out marginals are close (max KS 0.11)
+  error.pointwise: PASS - RMSE 0.09773, skill 0.93
+  error.field: SKIP - skipped: output is not a spatial field (field size 2)
+  calibration.coverage: SKIP - skipped: no predicted uncertainty (return (mean, std) or set metadata['predicted_std'])
+  constraints.physical: SKIP - skipped: need predict, X_test, and metadata['constraints']
+  export.roundtrip: SKIP - skipped: need predict, X_test, and metadata['exported_predict']
+  speed.inference: PASS - within budget: 96014470 samples/s, 1.04e-08s/sample
 ```
 
-Every registered check ran. Some passed, some had nothing to work with and
-returned `skip` (a first-class outcome, never a silent pass), and one marginal
-drifted enough to `warn`. Open `report.html` to see the same thing with figures.
+Every registered check ran. Some passed; the ones that had nothing to work
+with returned `SKIP`, a first-class outcome that is never a silent pass, and
+each SKIP line says what to provide to enable that check. `report.html` is the
+same report as a single self-contained page; set
+`metadata["make_figures"] = True` (with the `viz` extra installed) to embed
+diagnostic figures in it.
 
 ## Reading the report
 

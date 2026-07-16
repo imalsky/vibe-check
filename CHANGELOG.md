@@ -13,6 +13,14 @@ registered, tested, and documented.
 - Core contract: `Status`, `CheckResult`, and `Report` (with `to_markdown` and a
   self-contained `to_html` that embeds figures as base64 PNG), plus the `check`
   orchestrator that runs the registered diagnostics and wraps failures.
+- Report ergonomics: both renderers open with a worst-first summary table and
+  accept a `title` keyword; `print(report)` gives a terse per-check listing;
+  metric values are formatted for display; unrecognized top-level `metadata`
+  keys raise a `UserWarning` so a typo cannot silently disable a check.
+- Sample-size-aware default thresholds for the distribution checks, so data
+  drawn iid from the training distribution rarely warns; explicit metadata
+  thresholds override. Drift figures include a histogram and quantile-quantile
+  view of the worst-drifting feature.
 - Ten reliability checks: `leakage.normalization`, `leakage.split_overlap`,
   `distribution.coverage`, `distribution.drift`, `error.pointwise`,
   `error.field`, `calibration.coverage`, `constraints.physical`,

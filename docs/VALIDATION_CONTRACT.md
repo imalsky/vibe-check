@@ -1,11 +1,10 @@
 # Validation contract
 
 This document defines the shared interface that every `vibe-check` diagnostic
-follows. It is the Month 1 deliverable ("define the validation contract"). The
-core types below (`Status`, `CheckResult`, `Report`) are implemented and stable
-in shape as of v0.0.x. The set of checks and their default thresholds are still
-expected to change as the community weighs in, so treat those as tunable, not
-frozen.
+follows. The core types below (`Status`, `CheckResult`, `Report`) are
+implemented and stable in shape as of 0.1.0. The set of checks and their
+default thresholds are still expected to change as the community weighs in, so
+treat those as tunable, not frozen.
 
 ## Design goals
 
@@ -37,32 +36,37 @@ and optional metadata describing channels, units, and constraints.
 
 Every check returns a `CheckResult`:
 
-- `name: str` — stable identifier, e.g. `"leakage.normalization"`.
-- `status: Status` — one of `PASS`, `WARN`, `FAIL`, `SKIP`, `ERROR`.
-- `summary: str` — one line a non-author can understand.
-- `metrics: dict[str, float]` — machine-readable numbers behind the verdict.
-- `figures: list[Figure]` — optional matplotlib figures (only if `viz` used).
-- `details: str` — optional longer explanation, markdown allowed.
+- `name: str`: stable identifier, e.g. `"leakage.normalization"`.
+- `status: Status`: one of `PASS`, `WARN`, `FAIL`, `SKIP`, `ERROR`.
+- `summary: str`: one line a non-author can understand.
+- `metrics: dict[str, float]`: machine-readable numbers behind the verdict.
+- `figures: list[Figure]`: optional matplotlib figures (only if `viz` used).
+- `details: str`: optional longer explanation, markdown allowed.
 
 ## Report
 
 A `Report` aggregates `CheckResult`s and renders them:
 
-- `report.to_markdown(path)` — text report, no heavy deps.
-- `report.to_html(path)` — self-contained HTML with embedded figures (`viz`).
-- `report.summary()` — the worst status across checks, for CI gating.
+- `report.to_markdown(path)`: text report, no heavy deps.
+- `report.to_html(path)`: self-contained HTML with embedded figures (`viz`).
+- `report.summary()`: the worst status across checks, for CI gating.
 
-## The core checks (target set)
+Both renderers accept an optional `title` keyword so a report can name the
+surrogate it describes. `print(report)` gives a terse per-check listing.
+
+## The core checks
+
+All ten are implemented, registered, and tested.
 
 | id                        | detects                                                        |
 |---------------------------|---------------------------------------------------------------|
 | `leakage.normalization`   | scaler/stats fit on test or full data instead of train only   |
 | `leakage.split_overlap`   | duplicate or near-duplicate rows across train/test            |
 | `distribution.coverage`   | test inputs outside the training domain (extrapolation)       |
-| `distribution.drift`      | train vs val vs test marginal drift (histograms, Q-Q, KS)     |
+| `distribution.drift`      | train vs val vs test marginal drift (per-feature KS distance; histogram and Q-Q figures) |
 | `error.pointwise`         | predicted-vs-true, residuals, per-channel error tables        |
 | `error.field`             | field-level true / predicted / percent-error maps             |
-| `calibration.coverage`    | stated uncertainty vs empirical coverage (conformal-style)    |
+| `calibration.coverage`    | stated uncertainty vs empirical coverage (Gaussian intervals) |
 | `constraints.physical`    | conservation, positivity, monotonicity, symmetry, bounds      |
 | `export.roundtrip`        | exported model output matches in-memory model                 |
 | `speed.inference`         | throughput / latency vs a user-set budget                     |

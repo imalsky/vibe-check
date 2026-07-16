@@ -20,22 +20,22 @@ stable but may still change before 1.0. See `CHANGELOG.md` and `ROADMAP.md`.
 
 ## What it checks
 
-- **Leakage** — normalization fit on the wrong split, train/test overlap.
-- **Distribution coverage** — train vs. validation vs. test drift; where the
+- **Leakage**: normalization fit on the wrong split, train/test overlap.
+- **Distribution coverage**: train vs. validation vs. test drift; where the
   model is being asked to extrapolate.
-- **Error** — predicted-vs-true, residuals, per-channel and field-level maps.
-- **Calibration** — are the model's stated uncertainties honest.
-- **Constraints** — conservation, positivity, monotonicity, symmetry, bounds.
-- **Export** — does the saved/exported model reproduce the in-memory one.
-- **Speed** — is inference actually fast enough for the intended use.
+- **Error**: predicted-vs-true, residuals, per-channel and field-level maps.
+- **Calibration**: are the model's stated uncertainties honest.
+- **Constraints**: conservation, positivity, monotonicity, symmetry, bounds.
+- **Export**: does the saved/exported model reproduce the in-memory one.
+- **Speed**: is inference actually fast enough for the intended use.
 
 ## Representative examples
 
 Three small surrogates that cover common scientific ML shapes:
 
-- **Robertson** stiff chemical kinetics — a local state-to-state emulator.
-- **Lorenz** system — an ordered-output trajectory emulator.
-- **Fourier Neural Operator** (Burgers / Darcy) — a spatial-field emulator.
+- **Robertson** stiff chemical kinetics: a local state-to-state emulator.
+- **Lorenz** system: an ordered-output trajectory emulator.
+- **Fourier Neural Operator** (Burgers): a spatial-field emulator.
 
 ## Install (development)
 
@@ -53,8 +53,13 @@ report = vc.check(
     X_train=X_train, y_train=y_train,
     X_test=X_test, y_test=y_test,
 )
+print(report)
 report.to_markdown("report.md")
 ```
+
+`predict` takes a batch of inputs and returns a batch of outputs, numpy in and
+numpy out. Checks whose inputs you did not provide report SKIP rather than
+silently passing; `docs/TUTORIAL.md` shows the metadata keys that enable them.
 
 ## Documentation
 
