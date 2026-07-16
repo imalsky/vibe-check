@@ -1,10 +1,11 @@
-# Validation contract (draft)
+# Validation contract
 
 This document defines the shared interface that every `vibe-check` diagnostic
-follows. It is the Month 1 deliverable ("define the validation contract"). It
-is a draft and is expected to change as the checks are implemented and as the
-community weighs in. Treat the shapes below as a starting point, not a frozen
-API.
+follows. It is the Month 1 deliverable ("define the validation contract"). The
+core types below (`Status`, `CheckResult`, `Report`) are implemented and stable
+in shape as of v0.0.x. The set of checks and their default thresholds are still
+expected to change as the community weighs in, so treat those as tunable, not
+frozen.
 
 ## Design goals
 
@@ -68,3 +69,26 @@ A `Report` aggregates `CheckResult`s and renders them:
 
 Each check documents: what it assumes, what a WARN vs FAIL means, and how to
 turn it off or tune its thresholds.
+
+## Metadata conventions
+
+Checks that need more than the arrays read from a shared, optional `metadata`
+dict. Every key is optional; a check that does not find what it needs returns
+`SKIP`. The keys in use today:
+
+| key                          | used by                 | meaning                                                           |
+|------------------------------|-------------------------|-------------------------------------------------------------------|
+| `normalization`              | `leakage.normalization` | `{"mean", "std"}` (optional `rtol`): the scaler stats you applied |
+| `split_overlap`              | `leakage.split_overlap` | `{"atol", "max_rows"}`: near-duplicate threshold and subsample cap|
+| `coverage`                   | `distribution.coverage` | `{"warn_frac", "fail_frac", "margin"}`                            |
+| `drift`                      | `distribution.drift`    | `{"warn_ks", "fail_ks"}`                                          |
+| `error`                      | `error.pointwise`       | `{"max_rmse", "warn_skill"}`                                      |
+| `error_field`                | `error.field`           | `{"warn_pct", "fail_pct", "max_rmse", "min_field_size", "is_field"}` |
+| `predicted_std`              | `calibration.coverage`  | array aligned with `y_test`, or a scalar (or return `(mean, std)`)|
+| `calibration`                | `calibration.coverage`  | `{"warn_tol", "fail_tol"}`                                        |
+| `constraints`                | `constraints.physical`  | list of constraint specs (see that check's docstring)             |
+| `constraints_config`         | `constraints.physical`  | `{"fail_frac"}`                                                   |
+| `exported_predict`           | `export.roundtrip`      | a callable `X -> y_hat` for the exported model                    |
+| `export`                     | `export.roundtrip`      | `{"atol", "rtol", "warn_frac"}`                                   |
+| `speed`                      | `speed.inference`       | `{"min_throughput", "max_latency_s", "warmup", "repeats"}`        |
+| `make_figures`               | all viz-capable checks  | set `True` to attach matplotlib figures (off by default)          |

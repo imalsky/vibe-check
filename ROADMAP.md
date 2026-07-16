@@ -7,7 +7,7 @@ tested, and its behavior is documented.
 ## M1 (Jun-Jul) - Contract and skeleton
 - [x] Package skeleton, CI, license, README
 - [x] Draft validation contract (`docs/VALIDATION_CONTRACT.md`)
-- [ ] Finalize `CheckResult` / `Report` API after first two checks land
+- [x] Finalize `CheckResult` / `Report` API after first two checks land
 - [x] `report.to_html` with embedded figures
 
 ## M2 (Jul-Aug) - Split, normalization, distribution, export
