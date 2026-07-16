@@ -13,7 +13,7 @@ tested, and its behavior is documented.
 ## M2 (Jul-Aug) - Split, normalization, distribution, export
 - [x] `leakage.normalization`
 - [x] `leakage.split_overlap`
-- [ ] `distribution.coverage`
+- [x] `distribution.coverage`
 - [ ] `distribution.drift`
 - [ ] `export.roundtrip`
 

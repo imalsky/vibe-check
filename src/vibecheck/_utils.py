@@ -61,6 +61,19 @@ def import_matplotlib():
         return None
 
 
+def want_figures(context: dict[str, Any]):
+    """Return pyplot if the caller opted into figures and matplotlib is present.
+
+    Figures are opt-in (``metadata['make_figures'] = True``) so checks stay
+    cheap by default; the worked examples turn them on for their reports.
+    Returns None when figures are not wanted or matplotlib is unavailable.
+    """
+    metadata = context.get("metadata") or {}
+    if not metadata.get("make_figures", False):
+        return None
+    return import_matplotlib()
+
+
 def ks_distance(a: np.ndarray, b: np.ndarray) -> float:
     """Two-sample Kolmogorov-Smirnov distance between two 1-D samples.
 
