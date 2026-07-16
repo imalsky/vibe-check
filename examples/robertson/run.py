@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import pathlib
 
+import matplotlib
+import matplotlib.style
 import numpy as np
 from scipy.integrate import solve_ivp
 from sklearn.neural_network import MLPRegressor
@@ -25,6 +27,11 @@ from sklearn.neural_network import MLPRegressor
 import vibecheck as vc
 
 HERE = pathlib.Path(__file__).resolve().parent
+
+# Report figures follow the shared example style; remove these two lines to
+# use your own matplotlib defaults.
+matplotlib.use("Agg")
+matplotlib.style.use(HERE.parent / "science.mplstyle")
 SEED = 0
 
 # Robertson rate constants.

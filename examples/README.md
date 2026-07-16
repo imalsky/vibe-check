@@ -24,6 +24,11 @@ python examples/robertson/run.py
 The same pattern applies to `examples/lorenz` and `examples/fno_burgers` (the
 FNO example needs PyTorch).
 
+Report figures use the shared matplotlib style in `examples/science.mplstyle`;
+each script applies it near the top, and removing those lines falls back to
+your own matplotlib defaults. The checks draw with cycle-relative colors, so
+they follow whatever style is active.
+
 ## robertson/ - local state-to-state emulator
 
 The Robertson stiff chemical-kinetics problem: a three-species ODE with widely

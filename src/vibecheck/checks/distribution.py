@@ -101,7 +101,7 @@ def coverage(**context: Any) -> CheckResult:
     plt = want_figures(context)
     if plt is not None:
         fig, ax = plt.subplots(figsize=(6, 3))
-        ax.bar(np.arange(per_feature_frac.size), per_feature_frac, color="#cf6a1a")
+        ax.bar(np.arange(per_feature_frac.size), per_feature_frac, color="C1")
         ax.set_ylim(bottom=0)
         if per_feature_frac.size and per_feature_frac.max() == 0:
             ax.text(
@@ -242,7 +242,7 @@ def drift(**context: Any) -> CheckResult:
         ks = comparisons[fig_label]
         warn_line, fail_line = thresholds[fig_label]
         fig, ax = plt.subplots(figsize=(6, 3))
-        ax.bar(np.arange(n_feat), ks, color="#1a6acf")
+        ax.bar(np.arange(n_feat), ks, color="C0")
         ax.axhline(
             warn_line, ls="--", lw=1, color="#9a6700", label=f"warn {warn_line:g}"
         )
@@ -251,6 +251,8 @@ def drift(**context: Any) -> CheckResult:
         )
         if n_feat <= 30:
             ax.set_xticks(np.arange(n_feat))
+        # Headroom above the fail line so the legend does not sit on it.
+        ax.set_ylim(0, max(fail_line * 1.35, float(np.nanmax(ks)) * 1.2))
         ax.set_xlabel("input feature")
         ax.set_ylabel("KS distance")
         ax.set_title(f"distribution.drift: train vs {fig_label}")
@@ -267,11 +269,11 @@ def drift(**context: Any) -> CheckResult:
             np.concatenate([train_col, other_col]), bins=30
         )
         ax_hist.hist(
-            train_col, bins=bins, density=True, alpha=0.5, color="#1a6acf",
+            train_col, bins=bins, density=True, alpha=0.5, color="C0",
             label="train",
         )
         ax_hist.hist(
-            other_col, bins=bins, density=True, alpha=0.5, color="#cf6a1a",
+            other_col, bins=bins, density=True, alpha=0.5, color="C1",
             label=worst_label,
         )
         ax_hist.set_xlabel(f"feature {worst_feature}")
@@ -280,7 +282,7 @@ def drift(**context: Any) -> CheckResult:
         qs = np.linspace(0.01, 0.99, 99)
         q_train = np.quantile(train_col, qs)
         q_other = np.quantile(other_col, qs)
-        ax_qq.plot(q_train, q_other, "o", ms=3, color="#1a6acf")
+        ax_qq.plot(q_train, q_other, "o", ms=3, color="C0")
         lims = [
             min(float(q_train.min()), float(q_other.min())),
             max(float(q_train.max()), float(q_other.max())),

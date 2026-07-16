@@ -119,7 +119,7 @@ def coverage(**context: Any) -> CheckResult:
         emp_curve = [float(np.mean(z <= k)) for k in sweep]
         fig, ax = plt.subplots(figsize=(4, 4))
         ax.plot([0, 1], [0, 1], "--", color="#888888", lw=1)
-        ax.plot(nom_curve, emp_curve, color="#1a6acf")
+        ax.plot(nom_curve, emp_curve, color="C0")
         ax.set_xlabel("nominal coverage")
         ax.set_ylabel("empirical coverage")
         ax.set_title("calibration.coverage: reliability")

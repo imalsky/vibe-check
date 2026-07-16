@@ -12,7 +12,7 @@ Overall: **WARN**
 | error.pointwise | PASS | RMSE 0.001574, skill 0.99 |
 | error.field | PASS | mean field error 0.6%, skill 0.99 |
 | export.roundtrip | PASS | exported model matches in-memory model (max abs diff 0) |
-| speed.inference | PASS | within budget: 2638 samples/s, 0.000379s/sample |
+| speed.inference | PASS | within budget: 6992 samples/s, 0.000143s/sample |
 | constraints.physical | SKIP | skipped: need predict, X_test, and metadata['constraints'] |
 
 ## leakage.normalization - PASS
@@ -113,10 +113,10 @@ exported model matches in-memory model (max abs diff 0)
 - `rtol`: 0.001
 
 ## speed.inference - PASS
-within budget: 2638 samples/s, 0.000379s/sample
+within budget: 6992 samples/s, 0.000143s/sample
 
-- `median_batch_seconds`: 0.05686
-- `throughput_samples_per_s`: 2638
-- `latency_per_sample_s`: 0.0003791
+- `median_batch_seconds`: 0.02145
+- `throughput_samples_per_s`: 6992
+- `latency_per_sample_s`: 0.000143
 - `n_samples`: 150
 - `min_throughput`: 100

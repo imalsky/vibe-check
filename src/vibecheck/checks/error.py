@@ -146,7 +146,7 @@ def pointwise(**context: Any) -> CheckResult:
                 else slice(None)
             )
             fig1, ax1 = plt.subplots(figsize=(4, 4))
-            ax1.scatter(yt_f[idx], yp_f[idx], s=6, alpha=0.4, color="#1a6acf")
+            ax1.scatter(yt_f[idx], yp_f[idx], s=6, alpha=0.4, color="C0")
             lims = [
                 float(min(yt_f.min(), yp_f.min())),
                 float(max(yt_f.max(), yp_f.max())),
@@ -157,7 +157,7 @@ def pointwise(**context: Any) -> CheckResult:
             ax1.set_title("error.pointwise: predicted vs true")
             fig1.tight_layout()
             fig2, ax2 = plt.subplots(figsize=(5, 3))
-            ax2.hist(resid_f, bins=40, color="#1a6acf")
+            ax2.hist(resid_f, bins=40, color="C0")
             ax2.set_xlabel("residual (predicted - true)")
             ax2.set_ylabel("count")
             ax2.set_title("error.pointwise: residuals")
@@ -363,7 +363,7 @@ def _field_figures(plt, true_field: np.ndarray, pred_field: np.ndarray) -> list:
     grid = np.arange(true_field.size)
     fig, axs = plt.subplots(1, 2, figsize=(9, 3.2))
     axs[0].plot(grid, true_field.ravel(), color="#222222", lw=1, label="true")
-    axs[0].plot(grid, pred_field.ravel(), color="#1a6acf", lw=1, ls="--", label="predicted")
+    axs[0].plot(grid, pred_field.ravel(), color="C0", lw=1, ls="--", label="predicted")
     axs[0].set_title("true vs predicted")
     axs[0].legend()
     axs[1].plot(grid, pct.ravel(), color="#cf222e", lw=1)

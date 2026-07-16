@@ -11,7 +11,7 @@ Overall: **WARN**
 | distribution.coverage | PASS | 0.0% of test points outside the training domain (within tolerance) |
 | error.pointwise | PASS | RMSE 0.1443, skill 0.98 |
 | export.roundtrip | PASS | exported model matches in-memory model (max abs diff 3.62e-06) |
-| speed.inference | PASS | within budget: 730327 samples/s, 1.37e-06s/sample |
+| speed.inference | PASS | within budget: 807800 samples/s, 1.24e-06s/sample |
 | error.field | SKIP | skipped: output is not a spatial field (field size 18) |
 | constraints.physical | SKIP | skipped: need predict, X_test, and metadata['constraints'] |
 
@@ -124,10 +124,10 @@ exported model matches in-memory model (max abs diff 3.62e-06)
 - `rtol`: 0.001
 
 ## speed.inference - PASS
-within budget: 730327 samples/s, 1.37e-06s/sample
+within budget: 807800 samples/s, 1.24e-06s/sample
 
-- `median_batch_seconds`: 0.002311
-- `throughput_samples_per_s`: 7.303e+05
-- `latency_per_sample_s`: 1.369e-06
+- `median_batch_seconds`: 0.00209
+- `throughput_samples_per_s`: 8.078e+05
+- `latency_per_sample_s`: 1.238e-06
 - `n_samples`: 1688
 - `min_throughput`: 10000

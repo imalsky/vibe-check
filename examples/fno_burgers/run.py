@@ -15,6 +15,8 @@ from __future__ import annotations
 import pathlib
 import warnings
 
+import matplotlib
+import matplotlib.style
 import numpy as np
 import torch
 import torch.nn as nn
@@ -23,6 +25,11 @@ import torch.nn.functional as F
 import vibecheck as vc
 
 HERE = pathlib.Path(__file__).resolve().parent
+
+# Report figures follow the shared example style; remove these two lines to
+# use your own matplotlib defaults.
+matplotlib.use("Agg")
+matplotlib.style.use(HERE.parent / "science.mplstyle")
 SEED = 0
 GRID = 64
 
