@@ -244,7 +244,7 @@ def _register_default_checks() -> None:
     change that implements and tests it, so the registry never holds a stub
     that would raise.
     """
-    from .checks import distribution, leakage
+    from .checks import distribution, error, leakage
 
     _REGISTERED_CHECKS.extend(
         [
@@ -252,6 +252,7 @@ def _register_default_checks() -> None:
             leakage.split_overlap,
             distribution.coverage,
             distribution.drift,
+            error.pointwise,
         ]
     )
 

@@ -18,7 +18,7 @@ tested, and its behavior is documented.
 - [ ] `export.roundtrip`
 
 ## M3 (Aug-Sep) - Error, calibration, constraint, speed
-- [ ] `error.pointwise`
+- [x] `error.pointwise`
 - [ ] `error.field`
 - [ ] `calibration.coverage`
 - [ ] `constraints.physical`
