@@ -253,6 +253,7 @@ def _register_default_checks() -> None:
             distribution.coverage,
             distribution.drift,
             error.pointwise,
+            error.field,
         ]
     )
 
