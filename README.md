@@ -14,8 +14,9 @@ This work is supported by a 2026 URSSI Fellowship (Code for Science & Society).
 
 ## Status
 
-Early development. The public API is not yet stable. See `ROADMAP.md` for the
-milestone plan and `docs/VALIDATION_CONTRACT.md` for the intended design.
+Version 0.1.0: all ten checks in the validation contract are implemented,
+tested, and documented, with three worked examples. The public API is close to
+stable but may still change before 1.0. See `CHANGELOG.md` and `ROADMAP.md`.
 
 ## What it checks
 

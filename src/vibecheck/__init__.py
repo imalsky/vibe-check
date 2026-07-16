@@ -4,7 +4,7 @@ The public API is intentionally small. The entry point is :func:`check`, which
 runs the available diagnostics over a surrogate and its data splits and returns
 a :class:`Report`.
 
-This package is in early development; the API is not yet stable.
+The API is close to stable but may still change before 1.0.
 """
 
 from __future__ import annotations
@@ -12,4 +12,4 @@ from __future__ import annotations
 from .core import CheckResult, Report, Status, check
 
 __all__ = ["check", "CheckResult", "Report", "Status"]
-__version__ = "0.0.1"
+__version__ = "0.1.0"

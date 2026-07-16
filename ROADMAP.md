@@ -29,7 +29,8 @@ tested, and its behavior is documented.
 - [x] Lorenz example + report template
 - [x] FNO (Burgers) example + report template
 - [x] Tutorial / end-to-end workflow doc
-- [ ] Tagged release; archive examples
+- [ ] Tagged release (0.1.0 prepared: version, CHANGELOG, packaging verified;
+  tag and PyPI publish pending sign-off). Examples archived with committed reports.
 - [x] URSSI case study on normalization leakage
 
 ## Ongoing (community)
