@@ -55,6 +55,13 @@ report = vc.check(
 report.to_markdown("report.md")
 ```
 
+## Documentation
+
+- `docs/TUTORIAL.md` - from a trained surrogate to a report, end to end.
+- `docs/VALIDATION_CONTRACT.md` - the interface every check follows and the
+  `metadata` keys each one reads.
+- `examples/` - three worked surrogates with committed reports.
+
 ## License
 
 MIT. See `LICENSE`.
