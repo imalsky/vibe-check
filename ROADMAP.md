@@ -21,7 +21,7 @@ tested, and its behavior is documented.
 - [x] `error.pointwise`
 - [x] `error.field`
 - [x] `calibration.coverage`
-- [ ] `constraints.physical`
+- [x] `constraints.physical`
 - [ ] `speed.inference`
 
 ## M4 (Sep-Nov) - Validate, document, release

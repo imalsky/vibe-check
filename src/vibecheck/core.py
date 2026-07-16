@@ -244,7 +244,7 @@ def _register_default_checks() -> None:
     change that implements and tests it, so the registry never holds a stub
     that would raise.
     """
-    from .checks import calibration, distribution, error, leakage
+    from .checks import calibration, constraints, distribution, error, leakage
 
     _REGISTERED_CHECKS.extend(
         [
@@ -255,6 +255,7 @@ def _register_default_checks() -> None:
             error.pointwise,
             error.field,
             calibration.coverage,
+            constraints.physical,
         ]
     )
 
