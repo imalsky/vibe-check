@@ -2,9 +2,9 @@
 
 This document defines the shared interface that every `vibe-check` diagnostic
 follows. The core types below (`Status`, `CheckResult`, `Report`) are
-implemented and stable in shape as of 0.1.0. The set of checks and their
-default thresholds are still expected to change as the community weighs in, so
-treat those as tunable, not frozen.
+implemented, and their shape is stable as of 0.1.0. The set of checks, and
+their default thresholds, are still expected to change as the community gives
+feedback. Treat those as tunable, not frozen.
 
 ## Design goals
 
@@ -51,8 +51,8 @@ A `Report` aggregates `CheckResult`s and renders them:
 - `report.to_html(path)`: self-contained HTML with embedded figures (`viz`).
 - `report.summary()`: the worst status across checks, for CI gating.
 
-Both renderers accept an optional `title` keyword so a report can name the
-surrogate it describes. `print(report)` gives a terse per-check listing.
+Both renderers accept an optional `title` keyword, so a report can name the
+surrogate it describes. `print(report)` gives a short, per-check listing.
 
 ## The core checks
 
@@ -76,9 +76,9 @@ turn it off or tune its thresholds.
 
 ## Metadata conventions
 
-Checks that need more than the arrays read from a shared, optional `metadata`
-dict. Every key is optional; a check that does not find what it needs returns
-`SKIP`. The keys in use today:
+Some checks need more than the arrays. They read extra settings from a shared,
+optional `metadata` dict. Every key is optional. A check that does not find
+what it needs returns `SKIP`. The keys in use today:
 
 | key                          | used by                 | meaning                                                           |
 |------------------------------|-------------------------|-------------------------------------------------------------------|

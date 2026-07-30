@@ -1,7 +1,7 @@
 # Tutorial: from a trained surrogate to a report
 
 This walks through validating a surrogate with `vibe-check`, end to end. It
-assumes you already have a trained model; the package does not train anything,
+assumes you already have a trained model. The package does not train anything;
 it checks what you bring.
 
 ## Install
@@ -13,11 +13,12 @@ pip install -e ".[viz]"
 ```
 
 The core depends only on numpy. The `viz` extra adds matplotlib for figures.
-Framework-specific code (torch, onnx) is never imported unless a check needs it.
+Framework-specific code (torch, onnx) is only imported when a check actually
+needs it.
 
 ## The one thing vibe-check needs
 
-Whatever your model is, reduce it to a `predict` callable that maps a batch of
+Whatever your model is, reduce it to a `predict` function. It maps a batch of
 inputs to a batch of outputs:
 
 ```
@@ -29,9 +30,9 @@ more checks.
 
 ## Quickstart
 
-This is a complete, runnable script. The "surrogate" is a linear least-squares
-fit, so it needs nothing beyond numpy, but the workflow is identical for a
-neural network: wrap it in `predict` and pass your splits.
+This is a complete, runnable script. The "surrogate" here is a linear
+least-squares fit, so it needs nothing beyond numpy. The workflow is the same
+for a neural network: wrap it in `predict` and pass your splits.
 
 ```python
 import numpy as np
@@ -82,12 +83,11 @@ vibe-check: PASS
   speed.inference: PASS - within budget: 96014470 samples/s, 1.04e-08s/sample
 ```
 
-Every registered check ran. Some passed; the ones that had nothing to work
-with returned `SKIP`, a first-class outcome that is never a silent pass, and
-each SKIP line says what to provide to enable that check. `report.html` is the
-same report as a single self-contained page; set
-`metadata["make_figures"] = True` (with the `viz` extra installed) to embed
-diagnostic figures in it.
+Every registered check ran. Some passed. The checks that had nothing to work
+with returned `SKIP`: a first-class outcome, never a silent pass. Each SKIP
+line says what to provide to turn that check on. `report.html` is the same
+report as a single self-contained page. Set `metadata["make_figures"] = True`
+(with the `viz` extra installed) to embed diagnostic figures in it.
 
 ## Reading the report
 
@@ -100,8 +100,8 @@ machine-readable `metrics`. The five statuses:
 - `SKIP` - the check could not run (its inputs were not provided). Not a pass.
 - `ERROR` - the check itself raised; treated as distinct from FAIL.
 
-`report.summary()` returns the worst status across all checks, which is what you
-gate CI on:
+`report.summary()` returns the worst status across all checks. Use it to gate
+CI:
 
 ```python
 if report.summary() is vc.Status.FAIL:
@@ -110,9 +110,9 @@ if report.summary() is vc.Status.FAIL:
 
 ## Turning on more checks
 
-Checks that need more than the raw arrays read from the optional `metadata`
-dict. A check that does not find what it needs returns `SKIP`, so you enable a
-check simply by providing its inputs:
+Some checks need more than the raw arrays. They read extra settings from the
+optional `metadata` dict. A check that does not find what it needs returns
+`SKIP`. So you turn on a check simply by providing its inputs:
 
 ```python
 metadata = {
@@ -144,13 +144,13 @@ The full set of metadata keys, per check, is tabulated in
 
 ## Tuning and turning off checks
 
-Each check reads its thresholds from `metadata`, so you can loosen or tighten a
-check without code changes, for example `metadata["drift"] = {"warn_ks": 0.15,
-"fail_ks": 0.3}`. To skip a check entirely, simply do not provide its inputs; it
+Each check reads its thresholds from `metadata`. You can loosen or tighten a
+check without changing code, for example `metadata["drift"] = {"warn_ks": 0.15,
+"fail_ks": 0.3}`. To skip a check entirely, just do not provide its inputs. It
 returns `SKIP` and stays out of the way.
 
 ## Next steps
 
-The [`examples/`](../examples) directory has three worked surrogates (Robertson
-kinetics, the Lorenz system, and an FNO on Burgers) with committed reports you
-can use as templates for your own model.
+The [`examples/`](../examples) directory has three worked surrogates
+(Robertson kinetics, the Lorenz system, and an FNO on Burgers), each with a
+committed report. Use them as templates for your own model.
