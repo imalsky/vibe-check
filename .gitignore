@@ -1,5 +1,6 @@
 # --- Financial / personal: do not push (kept locally only) ---
 code-for-science-and-society-invoice/
+private/
 
 # --- Python ---
 __pycache__/
