@@ -64,7 +64,7 @@ jobs:
           contents=$(tar -tzf dist/*.tar.gz)
           echo "$contents"
           for forbidden in proposal CLAUDE.md GOAL.md report.html; do
-            if echo "$contents" | grep -q "$forbidden"; then
+            if echo "$contents" | grep -qF "$forbidden"; then
               echo "sdist contains forbidden entry: $forbidden" >&2
               exit 1
             fi
