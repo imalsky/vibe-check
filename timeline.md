@@ -8,81 +8,65 @@
 | **Repository** | https://github.com/imalsky/vibe-check |
 | **Updated** | July 31, 2026 |
 
-This is the timeline deliverable for the 2026 URSSI Early-Career Fellowship.
-
-## Status as of July 31, 2026
-
-The diagnostic core is in progress. All ten checks in the validation contract
-are implemented and passing CI, and the three worked examples run end to end
-with committed reports.
-
-An early package is not a finished project. The proposal treated the remaining
-work as secondary. I now think it is the harder half: putting the package in
-front of people who build emulators in other fields, and changing the checks
-based on what they find. A validation tool built on one person's assumptions is
-not a shared standard.
-
-| Item | Status |
-|---|---|
-| Validation contract (`docs/VALIDATION_CONTRACT.md`) | In progress |
-| Package skeleton, CI (Python 3.10 / 3.11 / 3.12), MIT | In progress |
-| Ten checks implemented, registered, tested | In progress |
-| `report.to_markdown` and `report.to_html` | In progress |
-| Robertson, Lorenz, FNO (Burgers) examples with reports | In progress |
-| Tutorial and end-to-end workflow doc | In progress |
-| Case study on normalization leakage | In progress |
-| Kickoff meeting | Done (July 23) |
-| Public repository | Pending |
-| Tagged 0.1.0 release and PyPI publish | Pending |
+The timeline of deliverables for the 2026 URSSI Early-Career Fellowship.
 
 ## Plan, July to December 2026
 
-### July
+This is the overall plan for the codebase over the course of the fellowship.
+This work will also be done in coordination with a series of blog posts
+documenting the fellowship work for URSSI.
 
-Define the validation contract and build the package skeleton. Implement all
-ten checks: `leakage.normalization`, `leakage.split_overlap`,
-`distribution.coverage`, `distribution.drift`, `error.pointwise`, `error.field`,
-`calibration.coverage`, `constraints.physical`, `export.roundtrip`, and
-`speed.inference`. Build the three representative examples, the tutorial, and
-the normalization-leakage case study. Attend the fellowship kickoff meeting.
+### July (Current)
+
+Define the scope of the validation and surrogate model checks, establish the
+package structure and report format, and create a small set of
+machine-learning emulators, starting with the three benchmarks the proposal
+names. The three toy models will be the Robertson stiff-kinetics system
+(Robertson 1966), the Lorenz trajectory (Lorenz 1963), and a Fourier neural
+operator on Burgers' equation (Li et al. 2021; Kovachki et al. 2023). These
+models are used to test common failure modes of machine-learning
+surrogates. Also plan out and start implementing the automated checks. This
+is in progress and will be updated continuously in the GitHub repository
+above. Submit the introductory blog post and initial timeline by August 1.
 
 ### August
 
-Make the repository public and tag the 0.1.0 release, then publish to PyPI.
-Post the introduction blog entry and send this timeline, both due August 1.
-Bi-weekly URSSI check-ins start August 14. Open the `community-feedback` issue
-label and start recruiting reviewers: the AI/ML group at JPL first, then
-researchers building emulators in climate, computational chemistry, and
-materials.
+Implement the split, normalization, distribution, and export checks. The
+current plan covers five checks: `leakage.normalization`
+catches scaler statistics fit on test or full data instead of train alone;
+`leakage.split_overlap` catches duplicate or near-duplicate rows across train
+and test; `distribution.coverage` flags test inputs that fall outside the
+training domain; `distribution.drift` flags marginal drift between train,
+validation, and test; and `export.roundtrip` checks that the exported model's
+output matches the in-memory model.
 
-### September and October
+### September
 
-Run the package against surrogates I did not write. That is the real test: can
-someone who did not train the model actually read the report? I expect it to
-change the default thresholds and the wording of the summaries. Triage
-community feedback and write down every change it causes. A check that changes
-because of outside feedback is a better outcome here than a check I happened to
-guess right the first time. Post monthly progress notes in the repository, and
-publish the update blog entry: progress plus the most interesting failure found
-so far.
+Add error, calibration, constraint, and speed diagnostics. Improve the
+clarity, accessibility, and consistency of generated validation reports.
+Complete and validate the three representative benchmark surrogates, and add
+further examples only if time permits.
+
+### October
+
+Tag the first public release (0.1.0) and publish it to PyPI so the package
+is pip-installable. Put the tutorial, validation contract, and example
+reports up on GitHub as the project's documentation, and start soliciting
+community suggestions. Submit a progress/update blog post (date
+provisional).
 
 ### November
 
-Validate the package in a second scientific domain. The proposal promises
-guidance that works across at least two domains, so this is where that claim
-actually gets tested. Archive the examples with their reports, so every number
-in them can be reproduced from a clean checkout. Make any API changes outside
-feedback forces, before locking in a stable release.
+Complete and polish the tutorial and three example validation reports.
+Continue polishing the project, and iterate on diagnostics and the rest of
+the codebase.
 
 ### December
 
-Publish the conclusion blog entry. Write the final report, about 1,500 words:
-what I proposed, what I delivered, how it affected the field, and what comes
-next. Cut a final tagged release, with documentation and examples current.
+Wrap up remaining work, and submit the conclusion blog post and final
+report (dates provisional).
 
 ## Deliverables
-
-From the proposal:
 
 1. An open-source Python package that tests normalization, data-split hygiene,
    training-domain coverage, constraint violations, calibration, exported
@@ -90,31 +74,6 @@ From the proposal:
 2. Validation on representative local, sequential, and spatial-field emulators.
 3. The package, documentation, and tutorial material open-sourced for community
    use.
-
-From the URSSI fellowship:
-
-4. This timeline (August 1).
-5. Three blog posts: introduction (August 1), update, conclusion.
-6. Final report, approximately 1,500 words, linking the openly accessible
-   products.
-7. Bi-weekly check-in meetings from August 14.
-
-## Risks
-
-**The repository is still private.** The proposal promises to host the package
-on GitHub from day one. That has not happened yet. Every community-facing item
-above depends on it, so making the repository public is the first thing on my
-list for August.
-
-**Community feedback may not arrive.** Asking for outside input is easy to plan
-and hard to actually get. If the `community-feedback` label is still empty by
-late September, I will switch strategy: go recruit two or three emulator
-authors directly and watch them run the package, instead of waiting for people
-to file issues on their own.
-
-**Thresholds reflect one person's calibration.** The current defaults encode my
-own judgment about what counts as a warning. That is the weakest part of the
-package, and the part most likely to change.
 
 ## Acknowledgment
 
