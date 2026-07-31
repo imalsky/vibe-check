@@ -2,23 +2,19 @@
 
 | | |
 |---|---|
-| **Project** | Reliability Checks for Machine-Learning Surrogates in Scientific Software |
+| **Project** | Vibe-Check: Reliability Checks for Machine-Learning Surrogates in Scientific Software |
 | **Fellow** | Isaac Malsky |
 | **Period** | July 2026 through December 2026 |
 | **Repository** | https://github.com/imalsky/vibe-check |
-| **Updated** | July 28, 2026 |
+| **Updated** | July 31, 2026 |
 
-This is the timeline deliverable for the 2026 URSSI Early-Career Fellowship. It
-maps the proposal (`docs/proposal/URSSI.pdf`) onto the fellowship period and
-records current status. `ROADMAP.md` tracks individual work items and updates as
-work lands. This document is the higher-level view.
+This is the timeline deliverable for the 2026 URSSI Early-Career Fellowship.
 
-## Status as of July 28, 2026
+## Status as of July 31, 2026
 
-The diagnostic core is complete. All ten checks in the validation contract are
-implemented, registered, tested, and documented. The three worked examples run
-end to end, with committed reports. The proposal spread this work across four
-months, ending in November. It was actually finished in July.
+The diagnostic core is in progress. All ten checks in the validation contract
+are implemented and passing CI, and the three worked examples run end to end
+with committed reports.
 
 An early package is not a finished project. The proposal treated the remaining
 work as secondary. I now think it is the harder half: putting the package in
@@ -28,62 +24,61 @@ not a shared standard.
 
 | Item | Status |
 |---|---|
-| Validation contract (`docs/VALIDATION_CONTRACT.md`) | Done |
-| Package skeleton, CI (Python 3.10 / 3.11 / 3.12), MIT | Done |
-| Ten checks implemented, registered, tested | Done |
-| `report.to_markdown` and `report.to_html` | Done |
-| Robertson, Lorenz, FNO (Burgers) examples with reports | Done |
-| Tutorial and end-to-end workflow doc | Done |
-| Case study on normalization leakage | Done |
+| Validation contract (`docs/VALIDATION_CONTRACT.md`) | In progress |
+| Package skeleton, CI (Python 3.10 / 3.11 / 3.12), MIT | In progress |
+| Ten checks implemented, registered, tested | In progress |
+| `report.to_markdown` and `report.to_html` | In progress |
+| Robertson, Lorenz, FNO (Burgers) examples with reports | In progress |
+| Tutorial and end-to-end workflow doc | In progress |
+| Case study on normalization leakage | In progress |
 | Kickoff meeting | Done (July 23) |
 | Public repository | Pending |
 | Tagged 0.1.0 release and PyPI publish | Pending |
 
 ## Plan, July to December 2026
 
-### July (complete)
+### July
 
-Define the validation contract and publish the package skeleton. Implement all
+Define the validation contract and build the package skeleton. Implement all
 ten checks: `leakage.normalization`, `leakage.split_overlap`,
 `distribution.coverage`, `distribution.drift`, `error.pointwise`, `error.field`,
 `calibration.coverage`, `constraints.physical`, `export.roundtrip`, and
-`speed.inference`. Build the three representative examples. Write the tutorial
-and the normalization-leakage case study. Attend the fellowship kickoff meeting.
+`speed.inference`. Build the three representative examples, the tutorial, and
+the normalization-leakage case study. Attend the fellowship kickoff meeting.
 
 ### August
 
-Make the repository public and tag the 0.1.0 release, then publish to PyPI. Post
-the introduction blog entry to the URSSI site and send this timeline (both due
-August 1). Begin bi-weekly URSSI check-ins on August 14. Open the
-`community-feedback` issue label and begin recruiting reviewers, starting with
-the AI/ML group at JPL and with researchers building emulators in climate,
-computational chemistry, and materials.
+Make the repository public and tag the 0.1.0 release, then publish to PyPI.
+Post the introduction blog entry and send this timeline, both due August 1.
+Bi-weekly URSSI check-ins start August 14. Open the `community-feedback` issue
+label and start recruiting reviewers: the AI/ML group at JPL first, then
+researchers building emulators in climate, computational chemistry, and
+materials.
 
 ### September and October
 
-Run the package against surrogates I did not write. This is the real test: can
-someone who did not train the model read the report? I expect it to change the
-default thresholds and the wording of the summaries. Triage community feedback
-and document every change it causes to the checks. A check that changes because
-of outside feedback is a better outcome for this fellowship than a check I
-happened to guess right. Post monthly progress notes in the repository. Publish
-the update blog entry, covering progress and the most interesting failure found
+Run the package against surrogates I did not write. That is the real test: can
+someone who did not train the model actually read the report? I expect it to
+change the default thresholds and the wording of the summaries. Triage
+community feedback and write down every change it causes. A check that changes
+because of outside feedback is a better outcome here than a check I happened to
+guess right the first time. Post monthly progress notes in the repository, and
+publish the update blog entry: progress plus the most interesting failure found
 so far.
 
 ### November
 
 Validate the package in a second scientific domain. The proposal promises
 guidance that works across at least two domains, so this is where that claim
-gets tested. Archive the examples with their reports, so every number in them
-can be reproduced from a clean checkout. Make any API changes that outside
-feedback requires, before a stable release.
+actually gets tested. Archive the examples with their reports, so every number
+in them can be reproduced from a clean checkout. Make any API changes outside
+feedback forces, before locking in a stable release.
 
 ### December
 
-Publish the conclusion blog entry. Write the final report (about 1,500 words),
-covering what was proposed, what was delivered, how the work affected the
-field, and what comes next. Cut a final tagged release, with documentation and
-examples up to date.
+Publish the conclusion blog entry. Write the final report, about 1,500 words:
+what I proposed, what I delivered, how it affected the field, and what comes
+next. Cut a final tagged release, with documentation and examples current.
 
 ## Deliverables
 
@@ -108,18 +103,18 @@ From the URSSI fellowship:
 
 **The repository is still private.** The proposal promises to host the package
 on GitHub from day one. That has not happened yet. Every community-facing item
-above depends on it, so making the repository public is the first task in
-August.
+above depends on it, so making the repository public is the first thing on my
+list for August.
 
 **Community feedback may not arrive.** Asking for outside input is easy to plan
 and hard to actually get. If the `community-feedback` label is still empty by
-late September, I will switch strategy: directly recruit two or three emulator
-authors and watch them run the package, instead of waiting for people to file
-issues on their own.
+late September, I will switch strategy: go recruit two or three emulator
+authors directly and watch them run the package, instead of waiting for people
+to file issues on their own.
 
-**Thresholds reflect one person's calibration.** The current default settings
-encode my own judgment about what counts as a warning. This is the weakest part
-of the package, and the part most likely to change.
+**Thresholds reflect one person's calibration.** The current defaults encode my
+own judgment about what counts as a warning. That is the weakest part of the
+package, and the part most likely to change.
 
 ## Acknowledgment
 
